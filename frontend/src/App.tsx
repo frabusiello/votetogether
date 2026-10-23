@@ -4,6 +4,7 @@ import {
   clearPlayerSeat,
   createGame,
   fetchGame,
+  fetchServerConfig,
   type Game,
   type Item,
   GameNotFoundError,
@@ -18,6 +19,7 @@ import {
   saveHostedGameCode,
   savePlayerSeat,
   saveVote,
+  type ServerConfig,
 } from './game'
 import {
   beginGame,
@@ -624,7 +626,30 @@ function GameScreen({ game, send, onStartOver }: GameScreenProps) {
   }
 }
 
+// Where players should go to join, as shown on the TV:
+// 1. PUBLIC_URL, when the server has one set (a domain, or a NAS's fixed name or IP).
+// 2. Otherwise the address the TV was opened with, e.g. http://192.168.1.20:8080 on a home server.
+// 3. Except when the TV is on the server itself via localhost, which phones can't reach: then the
+//    server's local network IP, on the same port.
+function useJoinAddress() {
+  const [config, setConfig] = useState<ServerConfig | null>(null)
+  useEffect(() => {
+    fetchServerConfig()
+      .then(setConfig)
+      .catch(() => {})
+  }, [])
+
+  const { hostname, host, port } = window.location
+  if (config?.publicUrl) return config.publicUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
+  const onThisMachine = ['localhost', '127.0.0.1', '[::1]'].includes(hostname)
+  if (onThisMachine && config?.lanAddress) {
+    return port ? `${config.lanAddress}:${port}` : config.lanAddress
+  }
+  return host
+}
+
 function LobbyScreen({ game, send, onStartOver }: GameScreenProps) {
+  const joinAddress = useJoinAddress()
   // Once someone presses Start, joining is closed, so the code gives way to the countdown.
   if (game.startingInMs != null) {
     return (
@@ -643,7 +668,7 @@ function LobbyScreen({ game, send, onStartOver }: GameScreenProps) {
   return (
     <main className="screen">
       <p className="tagline">
-        Go to <strong>{window.location.host}</strong> and join with the code
+        Go to <strong>{joinAddress}</strong> and join with the code
       </p>
       <div className="game-code" role="img" aria-label={`Game code ${game.code.split('').join(' ')}`}>
         {game.code.split('').map((letter, i) => (

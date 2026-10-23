@@ -19,7 +19,8 @@ npm install && npm run install:all
 npm run dev        # runs backend and frontend together
 ```
 
-Open http://localhost:5173.
+Open http://localhost:5173. The dev server also listens on your network, so phones on the same
+Wi-Fi can join at the address the TV shows.
 
 ## Database
 
@@ -32,6 +33,37 @@ npm run db:migrate && npm run db:seed
 ```
 
 After changing the schema, run `npm run db:generate` to create a new migration.
+
+## Running with Docker
+
+The repo includes a `Dockerfile` and a `docker-compose.yml` that run the whole game, Postgres and
+the question set included, for example on a home server or a NAS:
+
+```sh
+docker compose up -d --build
+```
+
+Then open `http://<the server's address>:8080` on the TV, e.g. `http://192.168.1.20:8080` or
+`http://nas.local:8080`, and press _Create game_.
+
+- **One port.** The app container serves both the API and the built frontend.
+- **Database.** Postgres runs in its own container and keeps its data in the `db-data` volume.
+- **Questions.** On every start the app applies any new migrations and loads the question set.
+  Both are safe to repeat, so updating is just `git pull && docker compose up -d --build`.
+
+Settings, read from the environment or from a `.env` file next to `docker-compose.yml`:
+
+| Variable | Default | What it's for |
+| --- | --- | --- |
+| `PORT` | `8080` | The port the game is served on. |
+| `PUBLIC_URL` | _(empty)_ | The address the TV tells players to join at, e.g. `http://192.168.1.20:8080` or `https://games.example.com`. |
+| `POSTGRES_PASSWORD` | `votetogether` | The database password. Change it if the server is reachable from outside your home network. |
+
+**The address on the TV.** When `PUBLIC_URL` is set, the TV always shows it. Otherwise the TV
+shows the address it was opened with, so opening the TV at the server's network address is enough.
+If the TV is opened on the server itself at `localhost`, the app shows the server's network IP
+instead, outside Docker only. Inside Docker the container can't see the server's real network
+address, so set `PUBLIC_URL` in that case.
 
 ## How a game works
 

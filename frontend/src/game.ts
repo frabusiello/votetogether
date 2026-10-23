@@ -118,6 +118,16 @@ async function errorMessage(res: Response, fallback: string) {
   return body.message ?? fallback
 }
 
+// From the server: PUBLIC_URL when it's set, and its local network IP when it can tell (not inside
+// Docker). Used to show players where to join.
+export type ServerConfig = { publicUrl: string | null; lanAddress: string | null }
+
+export async function fetchServerConfig(): Promise<ServerConfig> {
+  const res = await fetch('/api/config')
+  if (!res.ok) throw new Error(`Loading the server config failed with ${res.status}`)
+  return res.json()
+}
+
 export async function createGame(): Promise<Game> {
   const res = await fetch('/api/games', { method: 'POST' })
   if (!res.ok) throw new Error(`Creating a game failed with ${res.status}`)
