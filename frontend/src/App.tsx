@@ -18,6 +18,7 @@ import {
   savePlayerSeat,
   VoteError,
 } from './game'
+import { useGameUpdates } from './socket'
 import './App.css'
 
 // A game saved in a cookie that this browser can reconnect to, either as the TV or as a player.
@@ -74,6 +75,11 @@ function App() {
     const saved = getSavedGame()
     if (saved) loadSavedGame(saved)
   }, [])
+
+  // The TV follows its game live, e.g. to show players as they join.
+  useGameUpdates(screen.name === 'game' ? screen.game.code : null, (game) =>
+    setScreen({ name: 'game', game }),
+  )
 
   switch (screen.name) {
     case 'restoring':

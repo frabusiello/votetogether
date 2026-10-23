@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:3000',
+      // ws: the game's WebSocket lives at /api/socket.io too.
+      '/api': { target: 'http://localhost:3000', ws: true },
     },
   },
 })

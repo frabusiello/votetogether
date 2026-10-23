@@ -77,6 +77,7 @@ export class GamesService {
     throw new ServiceUnavailableException('Could not allocate a game code, try again');
   }
 
+  // Returns the player, and whether they're new to the game (so the game changed) or rejoined.
   async join(code: string, rawName: unknown) {
     const name = typeof rawName === 'string' ? rawName.trim() : '';
     if (name.length < 1 || name.length > MAX_NAME_LENGTH) {
@@ -98,7 +99,7 @@ export class GamesService {
         .where(and(eq(players.gameId, game.id), sql`lower(${players.name}) = lower(${name})`));
 
     const [existing] = await findPlayer();
-    if (existing) return existing;
+    if (existing) return { player: existing, created: false };
     if (game.status !== 'lobby') throw new ConflictException('This game has already started');
 
     // Two joins at the same moment could squeeze in a 21st player; that's fine for a party game.
@@ -115,8 +116,9 @@ export class GamesService {
       .values({ gameId: game.id, name })
       .onConflictDoNothing({ target: [players.gameId, players.name] })
       .returning({ id: players.id, name: players.name });
+    if (created) return { player: created, created: true };
     // Someone else took the name between the lookup and the insert: they're the same player.
-    return created ?? (await findPlayer())[0];
+    return { player: (await findPlayer())[0], created: false };
   }
 
   async getState(code: string) {

@@ -1,9 +1,13 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { GamesGateway } from './games.gateway.js';
 import { GamesService } from './games.service.js';
 
 @Controller('games')
 export class GamesController {
-  constructor(private readonly games: GamesService) {}
+  constructor(
+    private readonly games: GamesService,
+    private readonly gateway: GamesGateway,
+  ) {}
 
   @Post()
   create() {
@@ -16,8 +20,11 @@ export class GamesController {
   }
 
   @Post(':code/players')
-  join(@Param('code') code: string, @Body('name') name: unknown) {
-    return this.games.join(code, name);
+  async join(@Param('code') code: string, @Body('name') name: unknown) {
+    const { player, created } = await this.games.join(code, name);
+    // Let the TV show the new player. A rejoin doesn't change the game, so there's nothing to send.
+    if (created) this.gateway.broadcastState(await this.games.getState(code));
+    return player;
   }
 
   @Post(':code/votes')
