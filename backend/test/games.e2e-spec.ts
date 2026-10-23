@@ -37,6 +37,21 @@ describe('GamesController (e2e)', () => {
     expect(first.body.code).not.toBe(second.body.code);
   });
 
+  it('/games/:code (GET) finds a game by code, case-insensitively', async () => {
+    const created = await request(app.getHttpServer()).post('/games').expect(201);
+    createdIds.push(created.body.id);
+
+    const found = await request(app.getHttpServer())
+      .get(`/games/${created.body.code.toLowerCase()}`)
+      .expect(200);
+    expect(found.body).toEqual(created.body);
+  });
+
+  it('/games/:code (GET) returns 404 for an unknown code', () => {
+    // Contains an O, so it can never be generated.
+    return request(app.getHttpServer()).get('/games/NOPE').expect(404);
+  });
+
   afterEach(async () => {
     if (createdIds.length) {
       await db.delete(games).where(inArray(games.id, createdIds.splice(0)));

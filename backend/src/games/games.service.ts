@@ -1,7 +1,16 @@
 import { randomInt } from 'node:crypto';
-import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { DB, type Db } from '../db/db.module.js';
 import { games } from '../db/schema.js';
+
+// What the API exposes about a game.
+const gameFields = { id: games.id, code: games.code, status: games.status };
 
 // No I or O, so codes can't be misread as 1 or 0 on the TV.
 export const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -27,10 +36,20 @@ export class GamesService {
         .insert(games)
         .values({ code: generateCode() })
         .onConflictDoNothing({ target: games.code })
-        .returning({ id: games.id, code: games.code, status: games.status });
+        .returning(gameFields);
 
       if (game) return game;
     }
     throw new ServiceUnavailableException('Could not allocate a game code, try again');
+  }
+
+  async findByCode(code: string) {
+    const [game] = await this.db
+      .select(gameFields)
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
+    return game;
   }
 }

@@ -38,9 +38,13 @@
     box-shadow 0.2s,
     transform 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     box-shadow: var(--shadow);
     transform: translateY(-2px);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
   }
   &:focus-visible {
     outline: 2px solid var(--accent);
@@ -56,6 +60,28 @@
 .secondary {
   color: var(--accent);
   background: var(--accent-bg);
+}
+
+.game-code {
+  font-family: var(--mono);
+  font-size: 160px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.15em;
+  margin-right: -0.15em;
+  color: var(--text-h);
+
+  @media (max-width: 1024px) {
+    font-size: 72px;
+  }
+}
+
+.error {
+  color: #d93f3f;
+
+  @media (prefers-color-scheme: dark) {
+    color: #ff7a7a;
+  }
 }
 
 .link {
