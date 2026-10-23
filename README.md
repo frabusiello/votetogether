@@ -46,8 +46,16 @@ After changing the schema, run `npm run db:generate` to create a new migration.
    A player can change their vote until the game moves on. The TV ticks off each player as they
    vote, without showing the scores.
 5. **Next question.** Once everyone has voted, the TV counts down 5 seconds and then moves everyone
-   to the next question. After the last question the game goes to the results, which are still a
-   placeholder.
+   to the next question.
+6. **Results.** After the last question, the TV goes through the results one question at a time.
+   Each question's chart is made of people's names: there's a column for each score from 1 to 10,
+   and every player's name is stacked in the column for the score they gave, coloured on the same
+   warm scale as the slider (red for "hate it", through mustard, to green for "love it"). Everyone
+   sees who voted what. Each phone shows that player's own score and a **Next** button. Tapping it
+   can't be undone. Once every *connected* player has tapped it, everyone moves straight on to the
+   next question's results, with no countdown. Players who have dropped out don't hold the others
+   up. The results go in question order for now; ordering them by how much people agreed is
+   planned.
 
 The TV and the phones each remember their game in a cookie (`vt_hosted_game` for the TV,
 `vt_player` for a phone), so a refresh or a dropped connection drops them back into the game.
@@ -74,22 +82,30 @@ id first. Everything after that goes over the socket:
 
 | Message | Sent by | What it does |
 | --- | --- | --- |
-| `watch` `{ code }` | TV and phones | Subscribe to a game. The reply carries the current state, so a screen that reconnects catches up. |
+| `watch` `{ code, playerId? }` | TV and phones (phones include their `playerId`) | Subscribe to a game. The reply carries the current state, so a screen that reconnects catches up. |
 | `start` `{ code, playerId }` | a phone | Begin the start countdown and close joining. |
 | `cancelStart` `{ code, playerId }` | a phone | Stop the start countdown and reopen joining. |
 | `begin` `{ code }` | every screen, when the start countdown hits 0 | Move to question 1. Only the first one counts. |
 | `vote` `{ code, playerId, score }` | a phone | Record or change a 1–10 vote on the current question. |
 | `next` `{ code, questionNumber }` | the TV, when its countdown hits 0 | Move to the next question, or to the results after the last. A repeated or late `next` does nothing. |
+| `next-result` `{ code, playerId, questionNumber }` | a phone, on the results | Mark this player ready to move on (it can't be undone). Once every connected player is ready, move to the next question's results. |
 
 After any change (a player joining, a countdown starting or being cancelled, a first vote on a
-question, the game moving on), the server pushes the updated game to every screen in the room as a
-`game` event.
+question, the game moving on, a player tapping Next on the results, a phone connecting or
+dropping out), the server pushes the updated game to every screen in the room as a `game` event.
+Scores stay hidden while the game is being played. Only `votedPlayerIds` is sent until the results,
+which include each player's score.
 
 **Countdowns run on the screens, not the server.** Nothing about them is stored in the database and
 the server runs no timers. The screens count down and send `begin` or `next` when they reach 0. The
 server only remembers, in memory, which lobbies are counting down to the start. That's how it keeps
 joining closed and tells a screen that reloads mid-countdown how long is left. If the server
 restarts, that's forgotten and the lobby simply reopens.
+
+**Who's connected, and who has tapped Next on the results, are also only kept in memory.** A player
+counts as connected while their phone's socket is watching the game, so a player with two tabs
+open still counts once. These come with every update as `connectedPlayerIds` and `readyPlayerIds`.
+If the server restarts, the phones reconnect and the players tap Next again.
 
 ## Tests
 

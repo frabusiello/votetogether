@@ -34,7 +34,7 @@ export function generateCode(): string {
   return code;
 }
 
-const isWholeNumber = (value: unknown): value is number => Number.isInteger(value);
+export const isWholeNumber = (value: unknown): value is number => Number.isInteger(value);
 
 @Injectable()
 export class GamesService {
@@ -156,12 +156,12 @@ export class GamesService {
       this.db.select({ total: count() }).from(gameItems).where(eq(gameItems.gameId, game.id)),
     ]);
 
-    // Who has voted on the current question, but not how, so scores stay hidden until results.
-    const voters = currentItem
+    const questionVotes = currentItem
       ? await this.db
-          .select({ playerId: votes.playerId })
+          .select({ playerId: votes.playerId, score: votes.score })
           .from(votes)
           .where(and(eq(votes.gameId, game.id), eq(votes.itemId, currentItem.id)))
+          .orderBy(asc(votes.createdAt), asc(votes.id))
       : [];
 
     return {
@@ -170,12 +170,17 @@ export class GamesService {
       status: game.status,
       category: category ?? null,
       players: gamePlayers,
+      // While playing, the question being voted on; in the results, the question whose votes are
+      // showing. Results go in question order for now: this is the place to sort them later (e.g.
+      // most agreed-on first).
       question: currentItem
         ? {
             number: game.currentItemIndex + 1,
             total,
             item: currentItem,
-            votedPlayerIds: voters.map((v) => v.playerId),
+            // Who has voted, but not how: scores stay hidden until the results.
+            votedPlayerIds: questionVotes.map((v) => v.playerId),
+            votes: game.status === 'results' ? questionVotes : null,
           }
         : null,
     };
@@ -216,8 +221,11 @@ export class GamesService {
       .from(gameItems)
       .where(eq(gameItems.gameId, game.id));
 
+    // After the last question the results start again from question 1.
     const next: Partial<typeof games.$inferInsert> =
-      fromNumber < total ? { currentItemIndex: fromNumber } : { status: 'results' };
+      fromNumber < total
+        ? { currentItemIndex: fromNumber }
+        : { status: 'results', currentItemIndex: 0 };
     const advanced = await this.db
       .update(games)
       .set(next)
@@ -230,6 +238,35 @@ export class GamesService {
       )
       .returning({ id: games.id });
     return advanced.length > 0 ? this.getState(code) : null;
+  }
+
+  // In the results, moves on from question `fromNumber`'s results to the next question's. Returns
+  // the new state, or null if there's nothing to do: the results already moved on, or that was the
+  // last question.
+  async nextResult(code: string, fromNumber: number) {
+    const [game] = await this.db
+      .select({ id: games.id })
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(gameItems)
+      .where(eq(gameItems.gameId, game.id));
+    if (fromNumber >= total) return null;
+
+    const moved = await this.db
+      .update(games)
+      .set({ currentItemIndex: fromNumber })
+      .where(
+        and(
+          eq(games.id, game.id),
+          eq(games.status, 'results'),
+          eq(games.currentItemIndex, fromNumber - 1),
+        ),
+      )
+      .returning({ id: games.id });
+    return moved.length > 0 ? this.getState(code) : null;
   }
 
   // Throws unless `playerId` is a player in the game.

@@ -39,6 +39,7 @@ describe('GamesController (e2e)', () => {
           total: expect.any(Number),
           item: { id: expect.any(Number), name: expect.any(String), imageUrl: null },
           votedPlayerIds: [],
+          votes: null,
         },
       });
       expect(body.question.total).toBeGreaterThan(0);

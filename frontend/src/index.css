@@ -49,6 +49,34 @@
   }
 }
 
+/* Scores 1 (hate it) to 10 (love it), warm red through mustard to green. Used by the slider and
+   the results chart. The ends are deep enough for cream text; 2–9 take dark text. The same in both
+   modes: the tags carry their own ink outline. */
+:root {
+  --score-1: #c94235;
+  --score-2: #e2603a;
+  --score-3: #e97a3a;
+  --score-4: #ee963b;
+  --score-5: #f0b43f;
+  --score-6: #d3b545;
+  --score-7: #b2ad47;
+  --score-8: #8fa64b;
+  --score-9: #6c9a4e;
+  --score-10: #367a40;
+}
+
+/* Sets --score-color and --score-ink (text on that colour) for one score. */
+.score-1 { --score-color: var(--score-1); --score-ink: #fffaf0; }
+.score-2 { --score-color: var(--score-2); --score-ink: #3a2a20; }
+.score-3 { --score-color: var(--score-3); --score-ink: #3a2a20; }
+.score-4 { --score-color: var(--score-4); --score-ink: #3a2a20; }
+.score-5 { --score-color: var(--score-5); --score-ink: #3a2a20; }
+.score-6 { --score-color: var(--score-6); --score-ink: #3a2a20; }
+.score-7 { --score-color: var(--score-7); --score-ink: #3a2a20; }
+.score-8 { --score-color: var(--score-8); --score-ink: #3a2a20; }
+.score-9 { --score-color: var(--score-9); --score-ink: #3a2a20; }
+.score-10 { --score-color: var(--score-10); --score-ink: #fffaf0; }
+
 #root {
   text-align: center;
   min-height: 100svh;

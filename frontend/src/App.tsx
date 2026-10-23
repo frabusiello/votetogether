@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useRef, useState } from 'react'
+import { type CSSProperties, type FormEvent, useEffect, useRef, useState } from 'react'
 import {
   clearHostedGameCode,
   clearPlayerSeat,
@@ -23,6 +23,7 @@ import {
   cancelStart,
   castVote,
   nextQuestion,
+  readyForNextResult,
   type Send,
   SocketError,
   startGame,
@@ -88,7 +89,8 @@ function App() {
   // The TV and the phones follow their game live (players joining, the game starting, votes), and
   // phones send their actions over the same connection.
   const liveCode = screen.name === 'game' || screen.name === 'player' ? screen.game.code : null
-  const send = useGameSocket(liveCode, (game) =>
+  const livePlayerId = screen.name === 'player' ? screen.player.id : null
+  const send = useGameSocket(liveCode, livePlayerId, (game) =>
     setScreen((current) => {
       if (current.name === 'game') return { name: 'game', game }
       if (current.name === 'player') {
@@ -322,7 +324,15 @@ function PlayerScreen(props: PlayerScreenProps) {
         </main>
       )
     case 'results':
-      return (
+      return game.question ? (
+        <PlayerResultsScreen
+          key={game.question.number}
+          game={game}
+          question={game.question}
+          player={player}
+          send={send}
+        />
+      ) : (
         <main className="screen">
           <h1>That's a wrap!</h1>
           <p>Check the TV to see how everyone voted.</p>
@@ -381,7 +391,8 @@ function VoteScreen({
   else if (votedElsewhere) buttonLabel = `Vote again: ${value}`
 
   return (
-    <main className="screen">
+    // The score's class colours the slider's thumb and the big number as the player slides.
+    <main className={`screen score-${value}`}>
       <p className="question-number">
         Question {question.number} of {question.total}
       </p>
@@ -602,10 +613,11 @@ function GameScreen({ game, send, onStartOver }: GameScreenProps) {
         </main>
       )
     case 'results':
-      return (
+      return game.question ? (
+        <ResultsScreen game={game} question={game.question} />
+      ) : (
         <main className="screen">
-          <h1>Results</h1>
-          <p>Results are coming soon.</p>
+          <h1>That's a wrap!</h1>
         </main>
       )
   }
@@ -713,6 +725,171 @@ function QuestionScreen({
           </li>
         ))}
       </ul>
+    </main>
+  )
+}
+
+// The TV's results for one question: a bar chart made of people's names, so everyone sees who
+// voted what. Each score from 1 to 10 is a column stacking a name tag per player who gave it, in
+// that score's colour; the stack's height is the count.
+function ResultsScreen({ game, question }: { game: Game; question: Question }) {
+  const votes = question.votes ?? []
+  const names = new Map(game.players.map((p) => [p.id, p.name]))
+  const columns = SCORES.map((score) => votes.filter((v) => v.score === score))
+  const tallest = Math.max(1, ...columns.map((column) => column.length))
+  const average = votes.length ? votes.reduce((sum, v) => sum + v.score, 0) / votes.length : null
+  const connected = new Set(game.connectedPlayerIds ?? [])
+  const ready = new Set(game.readyPlayerIds ?? [])
+  const isLast = question.number >= question.total
+
+  return (
+    <main className="screen">
+      <p className="question-number">
+        Results · {question.number} of {question.total}
+      </p>
+      <h1 className="question-name">{question.item.name}</h1>
+      <p>
+        {average === null ? (
+          'Nobody voted on this one.'
+        ) : (
+          <>
+            Average <strong>{average.toFixed(1)}</strong> from {votes.length}{' '}
+            {votes.length === 1 ? 'vote' : 'votes'}
+          </>
+        )}
+      </p>
+      {/* --rows lets the tags shrink when one score gets a tall stack. */}
+      <figure className="name-chart" style={{ '--rows': tallest } as CSSProperties}>
+        <div className="name-chart-columns">
+          {columns.map((column, i) => {
+            const voters = column.map((v) => names.get(v.playerId) ?? 'Someone')
+            return (
+              <div
+                key={i}
+                className={`name-chart-column score-${i + 1}`}
+                role="group"
+                aria-label={`${i + 1}: ${voters.length ? voters.join(', ') : 'nobody'}`}
+              >
+                {voters.map((name, j) => (
+                  <span key={column[j].playerId} className="name-chart-tag" title={name}>
+                    {name}
+                  </span>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+        <div className="name-chart-axis" aria-hidden="true">
+          {SCORES.map((score) => (
+            <span key={score}>{score}</span>
+          ))}
+        </div>
+        <div className="scale-labels" aria-hidden="true">
+          <span>Hate it</span>
+          <span>Love it</span>
+        </div>
+      </figure>
+      {isLast ? (
+        <p className="tagline">That's all the results!</p>
+      ) : (
+        <>
+          <ul className="players votes" aria-label="Ready for the next one">
+            {game.players.map((player) => {
+              const isReady = ready.has(player.id)
+              const away = !connected.has(player.id)
+              return (
+                <li
+                  key={player.id}
+                  className={isReady ? 'voted' : away ? 'away' : undefined}
+                >
+                  {player.name}
+                  {away && !isReady && ' · away'}
+                  <span className="sr-only">{isReady ? ', ready' : ', not ready yet'}</span>
+                </li>
+              )
+            })}
+          </ul>
+          <p>Tap Next on your phone when you're ready.</p>
+        </>
+      )}
+    </main>
+  )
+}
+
+// A player's phone on the results: their own score for the question being shown, and Next.
+// Tapping Next can't be undone; once every connected player has, everyone moves on.
+function PlayerResultsScreen({
+  game,
+  question,
+  player,
+  send,
+}: {
+  game: Game
+  question: Question
+  player: Player
+  send: Send
+}) {
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const myScore = question.votes?.find((v) => v.playerId === player.id)?.score ?? null
+  const isReady = (game.readyPlayerIds ?? []).includes(player.id)
+  const connected = game.connectedPlayerIds ?? []
+  const readyCount = connected.filter((id) => game.readyPlayerIds?.includes(id)).length
+  const isLast = question.number >= question.total
+
+  async function handleNext() {
+    setSending(true)
+    setError(null)
+    try {
+      await readyForNextResult(send, game.code, player.id, question.number)
+    } catch (err) {
+      setError(
+        err instanceof SocketError ? err.message : "Couldn't send that. Check the connection.",
+      )
+      setSending(false)
+    }
+  }
+
+  return (
+    <main className={myScore === null ? 'screen' : `screen score-${myScore}`}>
+      <p className="question-number">
+        Results · {question.number} of {question.total}
+      </p>
+      <h1 className="vote-name">{question.item.name}</h1>
+      {myScore === null ? (
+        <p>You didn't vote on this one.</p>
+      ) : (
+        <>
+          <p>You voted</p>
+          <p className="score-card">{myScore}</p>
+        </>
+      )}
+      {isLast ? (
+        <p>That's all the results! Check the TV.</p>
+      ) : (
+        <>
+          <div className="actions">
+            <button
+              type="button"
+              className={isReady ? 'primary done' : 'primary'}
+              disabled={sending || isReady}
+              onClick={handleNext}
+            >
+              {isReady ? 'Ready ✓' : sending ? 'Sending…' : 'Next'}
+            </button>
+          </div>
+          <p role="status">
+            {isReady
+              ? `Waiting for the others… ${readyCount} of ${connected.length} ready`
+              : 'Check the TV, then tap Next when you’re ready.'}
+          </p>
+        </>
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
     </main>
   )
 }

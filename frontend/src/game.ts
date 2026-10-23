@@ -10,6 +10,9 @@ export type Game = {
   // While the lobby counts down to the first question, how long is left. Only sent over the
   // socket; null or missing otherwise.
   startingInMs?: number | null
+  // Also socket-only: the players with a phone connected, and on the results who has tapped Next.
+  connectedPlayerIds?: number[]
+  readyPlayerIds?: number[]
   players: Player[]
   question: Question | null
 }
@@ -20,6 +23,8 @@ export type Question = {
   item: Item
   // Who has voted on this question so far. Scores stay hidden until the results.
   votedPlayerIds: number[]
+  // Each player's score, only once the game is showing the results.
+  votes: { playerId: number; score: number }[] | null
 }
 
 // The game this browser is hosting, so the TV can get back to it after a refresh or a dropped

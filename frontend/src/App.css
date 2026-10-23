@@ -238,6 +238,71 @@
   }
 }
 
+/* On the results, a player who isn't connected right now. */
+.players.votes li.away {
+  opacity: 0.45;
+}
+
+/* The results chart: ten columns, 1 to 10, each a stack of name tags in that score's colour,
+   built up from the baseline. --rows (the tallest stack) shrinks the tags so up to 20 players fit. */
+.name-chart {
+  margin: 0;
+  width: min(1000px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name-chart-columns {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+  min-height: 120px;
+  padding: 0 4px;
+  border-bottom: var(--outline);
+}
+
+.name-chart-column {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  padding-bottom: 2px;
+}
+
+.name-chart-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: min(34px, calc(44svh / var(--rows)));
+  padding: 0 4px;
+  overflow: hidden;
+  font-size: min(17px, calc(44svh / var(--rows) * 0.55));
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--score-ink);
+  background: var(--score-color);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+
+  @media (max-width: 700px) {
+    font-size: min(12px, calc(44svh / var(--rows) * 0.5));
+    padding: 0 2px;
+  }
+}
+
+.name-chart-axis {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 4px;
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-h);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -302,12 +367,14 @@
   font-size: 96px;
   font-weight: 900;
   line-height: 1;
-  color: var(--ink);
-  background: var(--card);
+  /* Takes the score's colour inside a .score-n (the vote screen), plain card otherwise. */
+  color: var(--score-ink, var(--ink));
+  background: var(--score-color, var(--card));
   border: var(--outline);
   border-radius: 14px;
   box-shadow: var(--shadow);
   transform: rotate(-2deg);
+  transition: background 0.15s;
 }
 
 .slider-field {
@@ -329,16 +396,17 @@
   background: none;
   cursor: pointer;
 
+  /* The track runs through the score colours, matching the results chart. */
   &::-webkit-slider-runnable-track {
     height: 18px;
-    background: var(--card);
+    background: linear-gradient(to right, var(--score-1), var(--score-2), var(--score-3), var(--score-4), var(--score-5), var(--score-6), var(--score-7), var(--score-8), var(--score-9), var(--score-10));
     border: var(--outline);
     border-radius: 999px;
     box-shadow: var(--shadow);
   }
   &::-moz-range-track {
     height: 12px;
-    background: var(--card);
+    background: linear-gradient(to right, var(--score-1), var(--score-2), var(--score-3), var(--score-4), var(--score-5), var(--score-6), var(--score-7), var(--score-8), var(--score-9), var(--score-10));
     border: var(--outline);
     border-radius: 999px;
     box-shadow: var(--shadow);
@@ -349,7 +417,7 @@
     width: var(--thumb);
     height: var(--thumb);
     margin-top: calc((18px - 6px - var(--thumb)) / 2);
-    background: var(--accent);
+    background: var(--score-color, var(--accent));
     border: var(--outline);
     border-radius: 50%;
     box-shadow: 3px 3px 0 var(--ink);
@@ -358,7 +426,7 @@
   &::-moz-range-thumb {
     width: calc(var(--thumb) - 6px);
     height: calc(var(--thumb) - 6px);
-    background: var(--accent);
+    background: var(--score-color, var(--accent));
     border: var(--outline);
     border-radius: 50%;
     box-shadow: 3px 3px 0 var(--ink);

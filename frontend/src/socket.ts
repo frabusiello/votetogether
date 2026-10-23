@@ -14,7 +14,12 @@ const ACK_TIMEOUT_MS = 5000
 // The live connection to a game while `code` is set: keeps the screen up to date with the game
 // and returns `send` for actions. On every (re)connect it asks for the current state, so updates
 // missed while offline aren't lost.
-export function useGameSocket(code: string | null, onUpdate: (game: Game) => void): Send {
+// Phones pass their `playerId`, so the server knows who's connected; the TV passes null.
+export function useGameSocket(
+  code: string | null,
+  playerId: number | null,
+  onUpdate: (game: Game) => void,
+): Send {
   const onUpdateRef = useRef(onUpdate)
   useEffect(() => {
     onUpdateRef.current = onUpdate
@@ -27,7 +32,7 @@ export function useGameSocket(code: string | null, onUpdate: (game: Game) => voi
     socketRef.current = socket
 
     socket.on('connect', () => {
-      socket.emit('watch', { code }, (reply: Reply<{ game: Game }>) => {
+      socket.emit('watch', { code, playerId }, (reply: Reply<{ game: Game }>) => {
         if ('game' in reply) onUpdateRef.current(reply.game)
       })
     })
@@ -37,7 +42,7 @@ export function useGameSocket(code: string | null, onUpdate: (game: Game) => voi
       socket.disconnect()
       socketRef.current = null
     }
-  }, [code])
+  }, [code, playerId])
 
   return useCallback(async <T,>(event: string, payload: object): Promise<T> => {
     const socket = socketRef.current
@@ -72,6 +77,17 @@ export async function beginGame(send: Send, code: string) {
 // Sent by the TV when the countdown after everyone has voted reaches zero.
 export async function nextQuestion(send: Send, code: string, questionNumber: number) {
   await send('next', { code, questionNumber })
+}
+
+// On the results, this player is ready to move on from question `questionNumber`. Can't be undone;
+// once every connected player has tapped it, the server moves everyone on.
+export async function readyForNextResult(
+  send: Send,
+  code: string,
+  playerId: number,
+  questionNumber: number,
+) {
+  await send('next-result', { code, playerId, questionNumber })
 }
 
 export async function castVote(send: Send, code: string, playerId: number, score: number) {

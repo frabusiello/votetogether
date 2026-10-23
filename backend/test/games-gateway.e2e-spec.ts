@@ -13,7 +13,14 @@ type GameState = {
   status: string;
   startingInMs: number | null;
   players: { id: number; name: string }[];
-  question: { number: number; total: number; votedPlayerIds: number[] } | null;
+  question: {
+    number: number;
+    total: number;
+    votedPlayerIds: number[];
+    votes: { playerId: number; score: number }[] | null;
+  } | null;
+  connectedPlayerIds: number[];
+  readyPlayerIds: number[];
 };
 
 describe('GamesGateway (e2e)', () => {
@@ -215,6 +222,101 @@ describe('GamesGateway (e2e)', () => {
         expect((await vote(score)).error).toBe('Score must be a whole number from 1 to 10');
       }
       expect(await vote(7, anaId + 100_000)).toEqual({ error: "You're not in this game" });
+    });
+  });
+  describe('results', () => {
+    let anaId: number;
+    let benId: number;
+    let total: number;
+    const phones: Socket[] = [];
+
+    // A player's phone: its own socket, watching the game as that player.
+    const connectPhone = async (playerId: number) => {
+      const phone = io(await app.getUrl(), { path: '/api/socket.io', transports: ['websocket'] });
+      phones.push(phone);
+      await phone.emitWithAck('watch', { code, playerId });
+      return phone;
+    };
+    const tapNext = (phone: Socket, playerId: number, questionNumber: number) =>
+      phone.emitWithAck('next-result', { code, playerId, questionNumber }) as Promise<Ack>;
+    // The TV's view once an update that matches `check` arrives.
+    const updateWhere = (check: (game: GameState) => boolean) =>
+      new Promise<GameState>((resolve) => {
+        const onGame = (game: GameState) => {
+          if (!check(game)) return;
+          socket.off('game', onGame);
+          resolve(game);
+        };
+        socket.on('game', onGame);
+      });
+
+    beforeEach(async () => {
+      anaId = (await join('Ana')).body.id;
+      benId = (await join('Ben')).body.id;
+      await watch(code);
+      await send('start', { playerId: anaId });
+      const started = await send('begin', {});
+      total = started.game?.question?.total ?? 0;
+
+      // Everyone votes on question 1, then the game skips to the last question and finishes it.
+      await send('vote', { playerId: anaId, score: 7 });
+      await send('vote', { playerId: benId, score: 9 });
+      expect((await watch(code)).game?.question?.votes).toBeNull(); // Hidden while playing.
+      await db.update(games).set({ currentItemIndex: total - 1 }).where(eq(games.code, code));
+    });
+
+    afterEach(async () => {
+      for (const phone of phones.splice(0)) phone.disconnect();
+      // Let the server finish handling the disconnects before the game and the app go away.
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    it("shows who voted what, one question at a time, moving on once every connected player taps Next", async () => {
+      const ana = await connectPhone(anaId);
+      const ben = await connectPhone(benId);
+      expect(await tapNext(ana, anaId, 1)).toEqual({ error: "The results aren't showing" });
+
+      const results = await send('next', { questionNumber: total });
+      expect(results.game).toMatchObject({
+        status: 'results',
+        connectedPlayerIds: expect.arrayContaining([anaId, benId]),
+        readyPlayerIds: [],
+        question: {
+          number: 1,
+          votes: [
+            { playerId: anaId, score: 7 },
+            { playerId: benId, score: 9 },
+          ],
+        },
+      });
+
+      const anaReady = await tapNext(ana, anaId, 1);
+      expect(anaReady.game).toMatchObject({ readyPlayerIds: [anaId], question: { number: 1 } });
+      expect((await tapNext(ana, anaId, 1)).game?.question?.number).toBe(1); // Tapping twice is fine.
+      expect(await tapNext(ana, anaId, 2)).toEqual({ game: null }); // Not showing yet.
+
+      const moved = await tapNext(ben, benId, 1);
+      expect(moved.game).toMatchObject({ readyPlayerIds: [], question: { number: 2, votes: [] } });
+      expect(await tapNext(ben, benId, 1)).toEqual({ game: null }); // A late tap changes nothing.
+    });
+
+    it("doesn't wait for players who dropped out", async () => {
+      const ana = await connectPhone(anaId);
+      const ben = await connectPhone(benId);
+      await send('next', { questionNumber: total });
+
+      // Ben leaves before tapping: Ana's tap alone moves on.
+      const benGone = updateWhere((game) => !game.connectedPlayerIds.includes(benId));
+      ben.disconnect();
+      expect((await benGone).connectedPlayerIds).toEqual([anaId]);
+      expect((await tapNext(ana, anaId, 1)).game?.question?.number).toBe(2);
+
+      // Ben comes back and Ana taps, then Ben drops out: his leaving is what moves things on.
+      const benAgain = await connectPhone(benId);
+      expect((await tapNext(ana, anaId, 2)).game).toMatchObject({ question: { number: 2 } });
+      const onToThree = updateWhere((game) => game.question?.number === 3);
+      benAgain.disconnect();
+      expect((await onToThree).readyPlayerIds).toEqual([]);
     });
   });
 });
