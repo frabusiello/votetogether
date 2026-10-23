@@ -68,6 +68,16 @@
   background: var(--mustard);
 }
 
+/* A finished action, like a cast vote: pressed in and settled rather than greyed out. */
+.actions button.done:disabled {
+  opacity: 1;
+  color: #3a2a20;
+  background: var(--mustard);
+  cursor: default;
+  transform: translate(3px, 3px);
+  box-shadow: var(--shadow-pressed);
+}
+
 /* The join code as a row of letter tiles. */
 .game-code {
   display: flex;
@@ -235,53 +245,103 @@
   margin: 0;
 }
 
-.scale {
+/* The picked score, big, on a tile like the join code's. */
+.score-card {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  place-items: center;
+  width: 1.5em;
+  height: 1.3em;
+  font-family: var(--display);
+  font-size: 96px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--card);
+  border: var(--outline);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  transform: rotate(-2deg);
+}
+
+.slider-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: min(420px, 100%);
 
-  button {
-    font-family: var(--display);
-    font-size: 28px;
-    font-weight: 900;
-    aspect-ratio: 1;
-    border-radius: 10px;
-    border: var(--outline);
-    color: var(--ink);
-    background: var(--card);
-    box-shadow: var(--shadow);
-    cursor: pointer;
-    transition:
-      transform 0.08s,
-      box-shadow 0.08s;
+  /* Room for the thumb to sit fully inside at 1 and 10, so the ticks line up under it. */
+  --thumb: 40px;
+}
 
-    &:active:not(:disabled) {
-      transform: translate(3px, 3px);
-      box-shadow: var(--shadow-pressed);
-    }
-    &:focus-visible {
-      outline: 3px dashed var(--accent);
-      outline-offset: 3px;
-    }
-    &:disabled {
-      opacity: 0.6;
-      cursor: progress;
-    }
-    &.selected {
-      color: var(--accent-ink);
-      background: var(--accent);
-      transform: translate(3px, 3px);
-      box-shadow: var(--shadow-pressed);
-    }
+/* A chunky ink-outlined track with a tomato counter for the thumb. */
+.slider {
+  appearance: none;
+  width: 100%;
+  height: var(--thumb);
+  margin: 0;
+  background: none;
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    height: 18px;
+    background: var(--card);
+    border: var(--outline);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
   }
+  &::-moz-range-track {
+    height: 12px;
+    background: var(--card);
+    border: var(--outline);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: var(--thumb);
+    height: var(--thumb);
+    margin-top: calc((18px - 6px - var(--thumb)) / 2);
+    background: var(--accent);
+    border: var(--outline);
+    border-radius: 50%;
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: grab;
+  }
+  &::-moz-range-thumb {
+    width: calc(var(--thumb) - 6px);
+    height: calc(var(--thumb) - 6px);
+    background: var(--accent);
+    border: var(--outline);
+    border-radius: 50%;
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: grab;
+  }
+  &:active::-webkit-slider-thumb {
+    cursor: grabbing;
+  }
+
+  &:focus-visible {
+    outline: 3px dashed var(--accent);
+    outline-offset: 6px;
+    border-radius: 999px;
+  }
+}
+
+/* 1–10 under the track, each centred where the thumb sits for that score. */
+.slider-ticks {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  margin-inline: calc(var(--thumb) / 2 - (100% - var(--thumb)) / 18);
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
 }
 
 .scale-labels {
   display: flex;
   justify-content: space-between;
-  width: min(420px, 100%);
-  margin-top: -10px;
   font-size: 15px;
   font-weight: 700;
 }

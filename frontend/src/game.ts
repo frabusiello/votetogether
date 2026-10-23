@@ -73,6 +73,30 @@ export async function joinGame(code: string, name: string): Promise<Player> {
   return res.json()
 }
 
+// The score this device last sent for a question, so the slider can show it after a refresh.
+// Only a convenience: the server holds the real vote, and storage may be unavailable.
+type VoteKey = { code: string; playerId: number; questionNumber: number }
+
+const voteStorageKey = ({ code, playerId, questionNumber }: VoteKey) =>
+  `vt_vote:${code}:${playerId}:${questionNumber}`
+
+export function getSavedVote(key: VoteKey): number | null {
+  try {
+    const score = Number(localStorage.getItem(voteStorageKey(key)))
+    return Number.isInteger(score) && score >= 1 && score <= 10 ? score : null
+  } catch {
+    return null
+  }
+}
+
+export function saveVote(key: VoteKey, score: number) {
+  try {
+    localStorage.setItem(voteStorageKey(key), String(score))
+  } catch {
+    // Storage blocked: the vote still counts, the slider just won't remember it.
+  }
+}
+
 // A vote the server refused (voting closed, not in the game, bad score), with its reason.
 export class VoteError extends Error {}
 
