@@ -7,8 +7,9 @@ export type Game = {
   code: string
   status: 'lobby' | 'playing' | 'results'
   category: { name: string } | null
-  // While the lobby counts down to the first question, how long is left. Null otherwise.
-  startingInMs: number | null
+  // While the lobby counts down to the first question, how long is left. Only sent over the
+  // socket; null or missing otherwise.
+  startingInMs?: number | null
   players: Player[]
   question: Question | null
 }

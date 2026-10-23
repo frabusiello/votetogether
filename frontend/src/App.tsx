@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import {
   clearHostedGameCode,
   clearPlayerSeat,
@@ -18,7 +18,16 @@ import {
   savePlayerSeat,
   saveVote,
 } from './game'
-import { cancelStart, castVote, type Send, SocketError, startGame, useGameSocket } from './socket'
+import {
+  beginGame,
+  cancelStart,
+  castVote,
+  nextQuestion,
+  type Send,
+  SocketError,
+  startGame,
+  useGameSocket,
+} from './socket'
 import './App.css'
 
 // A game saved in a cookie that this browser can reconnect to, either as the TV or as a player.
@@ -135,6 +144,7 @@ function App() {
       return (
         <GameScreen
           game={screen.game}
+          send={send}
           onStartOver={() => {
             clearHostedGameCode()
             setScreen({ name: 'home' })
@@ -303,6 +313,7 @@ function PlayerScreen(props: PlayerScreenProps) {
           code={game.code}
           player={player}
           question={game.question}
+          playerCount={game.players.length}
           send={send}
         />
       ) : (
@@ -327,11 +338,13 @@ function VoteScreen({
   code,
   player,
   question,
+  playerCount,
   send,
 }: {
   code: string
   player: Player
   question: Question
+  playerCount: number
   send: Send
 }) {
   const voteKey = { code, playerId: player.id, questionNumber: question.number }
@@ -409,11 +422,13 @@ function VoteScreen({
         </button>
       </div>
       <p role="status">
-        {votedScore !== null
-          ? `Your vote is in: ${votedScore}. Slide to change it.`
-          : votedElsewhere
-            ? 'Your vote is in. Slide and vote again to change it.'
-            : 'Slide to pick a score, then vote.'}
+        {question.votedPlayerIds.length >= playerCount
+          ? "Everyone's voted! Next question coming up."
+          : votedScore !== null
+            ? `Your vote is in: ${votedScore}. Slide to change it.`
+            : votedElsewhere
+              ? 'Your vote is in. Slide and vote again to change it.'
+              : 'Slide to pick a score, then vote.'}
       </p>
       {error && (
         <p className="error" role="alert">
@@ -443,10 +458,10 @@ function PlayerLobbyScreen({ game, player, send, onLeave }: PlayerScreenProps) {
   }
 
   const count = game.players.length
-  if (game.startingInMs !== null) {
+  if (game.startingInMs != null) {
     return (
       <main className="screen">
-        <Countdown key={game.startingInMs} ms={game.startingInMs} />
+        <StartCountdown ms={game.startingInMs} code={game.code} send={send} />
         <p>Someone still joining? Anyone can stop the countdown.</p>
         <div className="actions">
           <button
@@ -512,7 +527,19 @@ function PlayerLobbyScreen({ game, player, send, onLeave }: PlayerScreenProps) {
 // Counts down to the first question. The server sends the time left rather than a clock time, so
 // the deadline is set from this device's clock when the update arrives; key it by `ms` so each
 // update resyncs it.
-function Countdown({ ms }: { ms: number }) {
+// Countdowns run here on the screens, not on the server: when one reaches zero, `onDone` tells
+// the server to move the game on.
+function Countdown({
+  ms,
+  label,
+  doneLabel,
+  onDone,
+}: {
+  ms: number
+  label: string
+  doneLabel: string
+  onDone: () => void
+}) {
   const [deadline] = useState(() => Date.now() + ms)
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -521,9 +548,18 @@ function Countdown({ ms }: { ms: number }) {
   }, [])
 
   const seconds = Math.max(0, Math.ceil((deadline - now) / 1000))
+  const onDoneRef = useRef(onDone)
+  useEffect(() => {
+    onDoneRef.current = onDone
+  })
+  const done = seconds === 0
+  useEffect(() => {
+    if (done) onDoneRef.current()
+  }, [done])
+
   return (
     <div className="countdown" role="timer" aria-live="polite">
-      <p className="countdown-label">{seconds > 0 ? 'Starting in' : 'Here we go!'}</p>
+      <p className="countdown-label">{done ? doneLabel : label}</p>
       <p className="score-card" aria-label={`${seconds} seconds`}>
         {seconds}
       </p>
@@ -531,14 +567,35 @@ function Countdown({ ms }: { ms: number }) {
   )
 }
 
+// The countdown after someone presses Start. Every screen sends `begin` when it reaches zero; the
+// server only acts on the first. Keyed by `ms` so each update from the server resyncs it.
+function StartCountdown({ ms, code, send }: { ms: number; code: string; send: Send }) {
+  return (
+    <Countdown
+      key={ms}
+      ms={ms}
+      label="Starting in"
+      doneLabel="Here we go!"
+      onDone={() => beginGame(send, code).catch(() => {})}
+    />
+  )
+}
+
 // The shared TV screen for a game, which depends on how far along the game is.
-function GameScreen({ game, onStartOver }: { game: Game; onStartOver: () => void }) {
+type GameScreenProps = { game: Game; send: Send; onStartOver: () => void }
+
+function GameScreen({ game, send, onStartOver }: GameScreenProps) {
   switch (game.status) {
     case 'lobby':
-      return <LobbyScreen game={game} onStartOver={onStartOver} />
+      return <LobbyScreen game={game} send={send} onStartOver={onStartOver} />
     case 'playing':
       return game.question ? (
-        <QuestionScreen question={game.question} players={game.players} />
+        <QuestionScreen
+          code={game.code}
+          question={game.question}
+          players={game.players}
+          send={send}
+        />
       ) : (
         <main className="screen">
           <p>This game has no questions.</p>
@@ -554,12 +611,12 @@ function GameScreen({ game, onStartOver }: { game: Game; onStartOver: () => void
   }
 }
 
-function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => void }) {
+function LobbyScreen({ game, send, onStartOver }: GameScreenProps) {
   // Once someone presses Start, joining is closed, so the code gives way to the countdown.
-  if (game.startingInMs !== null) {
+  if (game.startingInMs != null) {
     return (
       <main className="screen">
-        <Countdown key={game.startingInMs} ms={game.startingInMs} />
+        <StartCountdown ms={game.startingInMs} code={game.code} send={send} />
         <ul className="players" aria-label="Players">
           {game.players.map((player) => (
             <li key={player.id}>{player.name}</li>
@@ -601,15 +658,40 @@ function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => voi
   )
 }
 
-function QuestionScreen({ question, players }: { question: Question; players: Player[] }) {
+// Once everyone has voted, the TV counts down this long before moving on.
+const NEXT_QUESTION_COUNTDOWN_MS = 5_000
+
+function QuestionScreen({
+  code,
+  question,
+  players,
+  send,
+}: {
+  code: string
+  question: Question
+  players: Player[]
+  send: Send
+}) {
   const { item } = question
   const voted = new Set(question.votedPlayerIds)
+  const everyoneVoted = players.length > 0 && voted.size >= players.length
+  const isLast = question.number >= question.total
   return (
     <main className="screen">
       <p className="question-number">
         Question {question.number} of {question.total}
       </p>
-      {item.imageUrl ? (
+      {everyoneVoted ? (
+        // The TV drives the game on: when this reaches zero it asks the server for the next
+        // question, which then reaches the phones too. Keyed by question so it restarts for each.
+        <Countdown
+          key={question.number}
+          ms={NEXT_QUESTION_COUNTDOWN_MS}
+          label={isLast ? "Everyone's voted! Results in" : "Everyone's voted! Next question in"}
+          doneLabel={isLast ? 'Here come the results!' : 'Next question!'}
+          onDone={() => nextQuestion(send, code, question.number).catch(() => {})}
+        />
+      ) : item.imageUrl ? (
         <img className="question-image" src={item.imageUrl} alt={item.name} />
       ) : (
         <div className="question-image placeholder" aria-hidden="true">

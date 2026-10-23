@@ -63,6 +63,17 @@ export async function cancelStart(send: Send, code: string, playerId: number) {
   return game
 }
 
+// Sent when this screen's start countdown reaches zero. Several screens send it; only the first
+// counts, and the game arrives over the socket either way.
+export async function beginGame(send: Send, code: string) {
+  await send('begin', { code })
+}
+
+// Sent by the TV when the countdown after everyone has voted reaches zero.
+export async function nextQuestion(send: Send, code: string, questionNumber: number) {
+  await send('next', { code, questionNumber })
+}
+
 export async function castVote(send: Send, code: string, playerId: number, score: number) {
   const { vote } = await send<{ vote: { itemId: number; score: number } }>('vote', {
     code,

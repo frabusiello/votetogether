@@ -21,7 +21,9 @@ export class GamesController {
 
   @Post(':code/players')
   async join(@Param('code') code: string, @Body('name') name: unknown) {
-    const { player, created } = await this.games.join(code, name);
+    const { player, created } = await this.games.join(code, name, {
+      startingSoon: this.gateway.isStartingSoon(code),
+    });
     // Let the screens show the new player. A rejoin doesn't change the game, so there's nothing to send.
     if (created) this.gateway.broadcastState(await this.games.getState(code));
     return player;

@@ -33,6 +33,75 @@ npm run db:migrate && npm run db:seed
 
 After changing the schema, run `npm run db:generate` to create a new migration.
 
+## How a game works
+
+1. **Create (TV).** _Create game_ makes a game with a 4-letter join code (no I or O, so it can't be
+   misread on a TV). Every game currently uses the _Foods_ category. The TV shows the code and
+   lists players as they join.
+2. **Join (phones).** Players enter the code and a name. A game holds up to 20 players.
+3. **Start (any phone).** Any player can press _Start game_ once everyone is in. That starts a
+   10-second countdown on every screen and closes the game to new players. Anyone can cancel it,
+   which reopens the lobby.
+4. **Vote (phones).** Each phone shows the current question with a 1–10 slider and a _Vote_ button.
+   A player can change their vote until the game moves on. The TV ticks off each player as they
+   vote, without showing the scores.
+5. **Next question.** Once everyone has voted, the TV counts down 5 seconds and then moves everyone
+   to the next question. After the last question the game goes to the results, which are still a
+   placeholder.
+
+The TV and the phones each remember their game in a cookie (`vt_hosted_game` for the TV,
+`vt_player` for a phone), so a refresh or a dropped connection drops them back into the game.
+
+## Player identity (a deliberate trade-off)
+
+There are no accounts yet, so **a player is identified by their name within a game**. Joining with
+a name that's already in the game, in any letter case, rejoins as that player instead of failing.
+That means someone who loses their cookie, switches phone or closes the tab can get straight back
+in just by typing their name again.
+
+The cost is that anyone who knows the code can take over another player's seat by typing their
+name. In the same spirit, socket actions (start, cancel, vote, next) take a player id with no
+authentication. This is a deliberate choice of ease of rejoining over security, because
+Votetogether is a party game played with friends in the same room. Revisit it when signup is
+added.
+
+## Realtime
+
+The TV and the phones stay in sync over a Socket.IO WebSocket at `/api/socket.io` (handled by
+`backend/src/games/games.gateway.ts`, used through `frontend/src/socket.ts`). Joining is the only
+player action that stays HTTP (`POST /api/games/:code/players`), because the phone needs its player
+id first. Everything after that goes over the socket:
+
+| Message | Sent by | What it does |
+| --- | --- | --- |
+| `watch` `{ code }` | TV and phones | Subscribe to a game. The reply carries the current state, so a screen that reconnects catches up. |
+| `start` `{ code, playerId }` | a phone | Begin the start countdown and close joining. |
+| `cancelStart` `{ code, playerId }` | a phone | Stop the start countdown and reopen joining. |
+| `begin` `{ code }` | every screen, when the start countdown hits 0 | Move to question 1. Only the first one counts. |
+| `vote` `{ code, playerId, score }` | a phone | Record or change a 1–10 vote on the current question. |
+| `next` `{ code, questionNumber }` | the TV, when its countdown hits 0 | Move to the next question, or to the results after the last. A repeated or late `next` does nothing. |
+
+After any change (a player joining, a countdown starting or being cancelled, a first vote on a
+question, the game moving on), the server pushes the updated game to every screen in the room as a
+`game` event.
+
+**Countdowns run on the screens, not the server.** Nothing about them is stored in the database and
+the server runs no timers. The screens count down and send `begin` or `next` when they reach 0. The
+server only remembers, in memory, which lobbies are counting down to the start. That's how it keeps
+joining closed and tells a screen that reloads mid-countdown how long is left. If the server
+restarts, that's forgotten and the lobby simply reopens.
+
+## Tests
+
+In `backend/`, with `VOTE_TOGETHER_PG_URL` pointing at a migrated and seeded database:
+
+```sh
+npm test           # unit tests
+npm run test:e2e   # end-to-end tests: HTTP endpoints and the WebSocket, against the real database
+```
+
+The end-to-end tests create their own games and delete them afterwards.
+
 ## Scripts
 
 - `npm run dev` — start both apps in watch mode

@@ -8,16 +8,12 @@ import { AppModule } from './../src/app.module.js';
 import { DB, type Db } from './../src/db/db.module.js';
 import { games, votes } from './../src/db/schema.js';
 
-// Short countdowns so the start tests don't wait the real 10 seconds.
-const COUNTDOWN_MS = 300;
-process.env.START_COUNTDOWN_MS = String(COUNTDOWN_MS);
-
 type GameState = {
   code: string;
   status: string;
   startingInMs: number | null;
   players: { id: number; name: string }[];
-  question: { number: number; votedPlayerIds: number[] } | null;
+  question: { number: number; total: number; votedPlayerIds: number[] } | null;
 };
 
 describe('GamesGateway (e2e)', () => {
@@ -74,11 +70,11 @@ describe('GamesGateway (e2e)', () => {
     expect(onGame).not.toHaveBeenCalled();
   });
 
-  describe('start', () => {
-    type Ack = { game?: GameState; error?: string };
-    const start = (playerId: unknown) => socket.emitWithAck('start', { code, playerId }) as Promise<Ack>;
-    const cancel = (playerId: unknown) =>
-      socket.emitWithAck('cancelStart', { code, playerId }) as Promise<Ack>;
+  type Ack = { game?: GameState | null; error?: string };
+  const send = (event: string, payload: object) =>
+    socket.emitWithAck(event, { code, ...payload }) as Promise<Ack>;
+
+  describe('start, cancelStart and begin', () => {
     let anaId: number;
     let benId: number;
 
@@ -88,16 +84,23 @@ describe('GamesGateway (e2e)', () => {
       await watch(code);
     });
 
-    it('counts down, closes joining, then moves everyone to the first question', async () => {
-      expect(await start(anaId + 100_000)).toEqual({ error: "You're not in this game" });
+    it('starts a countdown on every screen and closes joining, then begin moves to question 1', async () => {
+      expect(await send('start', { playerId: anaId + 100_000 })).toEqual({
+        error: "You're not in this game",
+      });
+      // Nothing to begin before anyone presses Start.
+      expect(await send('begin', {})).toEqual({ game: null });
 
       const countdown = nextUpdate();
-      const started = await start(anaId);
+      const started = await send('start', { playerId: anaId });
       expect(started.game).toMatchObject({ status: 'lobby', startingInMs: expect.any(Number) });
       expect(started.game?.startingInMs).toBeGreaterThan(0);
       expect((await countdown).startingInMs).toEqual(expect.any(Number));
+      expect((await watch(code)).game?.startingInMs).toEqual(expect.any(Number));
 
-      expect(await start(benId)).toEqual({ error: 'This game is already starting' });
+      expect(await send('start', { playerId: benId })).toEqual({
+        error: 'This game is already starting',
+      });
       const late = await request(app.getHttpServer())
         .post(`/games/${code}/players`)
         .send({ name: 'Chiara' })
@@ -105,26 +108,63 @@ describe('GamesGateway (e2e)', () => {
       expect(late.body.message).toBe('This game is about to start');
       await join('ana'); // Players already in can still rejoin.
 
-      const playing = await nextUpdate();
-      expect(playing).toMatchObject({ status: 'playing', startingInMs: null, question: { number: 1 } });
-      expect(await start(anaId)).toEqual({ error: 'This game has already started' });
+      const playing = nextUpdate();
+      const begun = await send('begin', {});
+      expect(begun.game).toMatchObject({ status: 'playing', startingInMs: null, question: { number: 1 } });
+      expect(await playing).toEqual(begun.game);
+
+      // Other screens finishing their countdown a moment later change nothing.
+      expect(await send('begin', {})).toEqual({ game: null });
+      expect(await send('start', { playerId: anaId })).toEqual({
+        error: 'This game has already started',
+      });
     });
 
     it('lets any player cancel the countdown, which reopens the lobby', async () => {
-      expect(await cancel(benId)).toEqual({ error: "The game isn't starting" });
-      await start(anaId);
+      expect(await send('cancelStart', { playerId: benId })).toEqual({
+        error: "The game isn't starting",
+      });
+      await send('start', { playerId: anaId });
 
       const update = nextUpdate();
-      const cancelled = await cancel(benId);
+      const cancelled = await send('cancelStart', { playerId: benId });
       expect(cancelled.game).toMatchObject({ status: 'lobby', startingInMs: null });
       expect(await update).toEqual(cancelled.game);
 
-      // The countdown's timer was cleared, so nothing more arrives and joining is open again.
-      const onGame = vi.fn();
-      socket.on('game', onGame);
-      await new Promise((resolve) => setTimeout(resolve, COUNTDOWN_MS + 200));
-      expect(onGame).not.toHaveBeenCalled();
+      // A screen whose countdown still ran out doesn't start the game, and joining is open again.
+      expect(await send('begin', {})).toEqual({ game: null });
       await join('Chiara');
+    });
+  });
+
+  describe('next', () => {
+    let anaId: number;
+
+    beforeEach(async () => {
+      anaId = (await join('Ana')).body.id;
+      await watch(code);
+      await send('start', { playerId: anaId });
+      await send('begin', {});
+    });
+
+    it('moves on to the next question once, however many times it is sent', async () => {
+      await send('vote', { playerId: anaId, score: 7 });
+
+      const update = nextUpdate();
+      const next = await send('next', { questionNumber: 1 });
+      expect(next.game).toMatchObject({ status: 'playing', question: { number: 2, votedPlayerIds: [] } });
+      expect(await update).toEqual(next.game);
+
+      expect(await send('next', { questionNumber: 1 })).toEqual({ game: null });
+      expect(await send('next', {})).toEqual({ error: 'questionNumber is required' });
+    });
+
+    it('goes to the results after the last question', async () => {
+      const total = (await watch(code)).game?.question?.total ?? 0;
+      await db.update(games).set({ currentItemIndex: total - 1 }).where(eq(games.code, code));
+
+      const results = await send('next', { questionNumber: total });
+      expect(results.game).toMatchObject({ status: 'results' });
     });
   });
 
@@ -141,18 +181,10 @@ describe('GamesGateway (e2e)', () => {
         vote?: { itemId: number; score: number };
         error?: string;
       }>;
-    // Starts the game and waits out the countdown.
+    // Starts the game, as a screen does when its countdown runs out.
     const start = async () => {
-      const playing = new Promise<void>((resolve) => {
-        const onGame = (game: GameState) => {
-          if (game.status !== 'playing') return;
-          socket.off('game', onGame);
-          resolve();
-        };
-        socket.on('game', onGame);
-      });
-      await socket.emitWithAck('start', { code, playerId: anaId });
-      await playing;
+      await send('start', { playerId: anaId });
+      await send('begin', {});
     };
 
     it('is closed while the game is in the lobby', async () => {

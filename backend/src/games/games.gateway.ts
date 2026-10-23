@@ -1,4 +1,4 @@
-import { HttpException, Logger, type OnModuleDestroy } from '@nestjs/common';
+import { ConflictException, HttpException } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -11,22 +11,33 @@ import { GamesService } from './games.service.js';
 
 type GameState = Awaited<ReturnType<GamesService['getState']>>;
 
+// Pressing Start counts down this long on every screen before the first question, so an accidental
+// tap can be cancelled.
+const START_COUNTDOWN_MS = 10_000;
+
 const room = (code: string) => `game:${code.toUpperCase()}`;
 
-// The live channel for a game's screens: the TV and the phones watch it for updates, and phones
-// send their actions (starting the game, cancelling the start, voting) over it. Lives under /api
-// like the rest of the API.
+// The live channel for a game's screens: the TV and the phones watch it for updates and send their
+// actions over it (starting and cancelling the start, beginning the game, voting, moving to the
+// next question). Lives under /api like the rest of the API.
+//
+// Countdowns run on the screens, which send `begin` or `next` when theirs reaches zero. The server
+// only remembers, in memory, which lobbies are counting down to the start, so it can keep joining
+// closed and tell a screen that reconnects how long is left.
 @WebSocketGateway({
   path: '/api/socket.io',
   cors: { origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173' },
 })
-export class GamesGateway implements OnModuleDestroy {
+export class GamesGateway {
   @WebSocketServer() private readonly server!: Server;
-  private readonly logger = new Logger(GamesGateway.name);
-  // Pending start countdowns by game id. If the server restarts, getState finishes them instead.
-  private readonly countdowns = new Map<number, NodeJS.Timeout>();
+  // Lobbies counting down to the start: game code to when the countdown ends (ms since epoch).
+  private readonly startingSoon = new Map<string, number>();
 
   constructor(private readonly games: GamesService) {}
+
+  isStartingSoon(code: string) {
+    return this.startingSoon.has(code.toUpperCase());
+  }
 
   // Start receiving updates for a game. Replies with the current state, so a screen that
   // reconnects catches up on anything it missed while it was offline.
@@ -35,29 +46,54 @@ export class GamesGateway implements OnModuleDestroy {
     return reply(async () => {
       const state = await this.games.getState(requireCode(body));
       await socket.join(room(state.code));
-      return { game: state };
+      return { game: this.withCountdown(state) };
     });
   }
 
-  // Begins the countdown to the first question; every screen shows it and any player can cancel.
+  // Any player can press Start in the lobby: every screen counts down, and joining closes.
   @SubscribeMessage('start')
   start(@MessageBody() body: { code?: unknown; playerId?: unknown }) {
     return reply(async () => {
-      const { state, gameId, countdownMs } = await this.games.start(requireCode(body), body.playerId);
-      this.scheduleStart(gameId, countdownMs);
-      this.broadcastState(state);
-      return { game: state };
+      const code = requireCode(body).toUpperCase();
+      await this.games.checkCanStart(code, body.playerId);
+      if (this.startingSoon.has(code)) throw new ConflictException('This game is already starting');
+      this.startingSoon.set(code, Date.now() + START_COUNTDOWN_MS);
+      return { game: await this.broadcast(code) };
     });
   }
 
+  // Any player can stop the start countdown, which reopens the lobby.
   @SubscribeMessage('cancelStart')
   cancelStart(@MessageBody() body: { code?: unknown; playerId?: unknown }) {
     return reply(async () => {
-      const { state, gameId } = await this.games.cancelStart(requireCode(body), body.playerId);
-      clearTimeout(this.countdowns.get(gameId));
-      this.countdowns.delete(gameId);
-      this.broadcastState(state);
-      return { game: state };
+      const code = requireCode(body).toUpperCase();
+      await this.games.findGameForPlayer(code, body.playerId);
+      if (!this.startingSoon.delete(code)) throw new ConflictException("The game isn't starting");
+      return { game: await this.broadcast(code) };
+    });
+  }
+
+  // Sent by the screens when the start countdown reaches zero. Only the first one counts; the rest
+  // (and any after a cancel) get { game: null }.
+  @SubscribeMessage('begin')
+  begin(@MessageBody() body: { code?: unknown }) {
+    return reply(async () => {
+      const code = requireCode(body).toUpperCase();
+      if (!this.startingSoon.delete(code)) return { game: null };
+      const state = await this.games.begin(code);
+      if (state) this.broadcastState(state);
+      return { game: state && this.withCountdown(state) };
+    });
+  }
+
+  // Sent by the TV when the countdown after everyone has voted reaches zero: moves on to the next
+  // question, or to the results after the last one. A repeated or stale `next` changes nothing.
+  @SubscribeMessage('next')
+  next(@MessageBody() body: { code?: unknown; questionNumber?: unknown }) {
+    return reply(async () => {
+      const state = await this.games.advance(requireCode(body), body.questionNumber);
+      if (state) this.broadcastState(state);
+      return { game: state && this.withCountdown(state) };
     });
   }
 
@@ -67,33 +103,26 @@ export class GamesGateway implements OnModuleDestroy {
       const code = requireCode(body);
       const { vote, created } = await this.games.vote(code, body.playerId, body.score);
       // Let the TV tick off the player. Changing a vote doesn't change who has voted.
-      if (created) this.broadcastState(await this.games.getState(code));
+      if (created) await this.broadcast(code);
       return { vote };
     });
   }
 
   broadcastState(state: GameState) {
-    this.server.to(room(state.code)).emit('game', state);
+    this.server.to(room(state.code)).emit('game', this.withCountdown(state));
   }
 
-  // When a countdown runs out, move the game to the first question and tell every screen.
-  private scheduleStart(gameId: number, delayMs: number) {
-    clearTimeout(this.countdowns.get(gameId));
-    const timer = setTimeout(() => {
-      this.countdowns.delete(gameId);
-      this.games
-        .finishCountdown(gameId)
-        .then(async (code) => {
-          if (code) this.broadcastState(await this.games.getState(code));
-        })
-        .catch((err: unknown) => this.logger.error(`Couldn't start game ${gameId}`, err));
-    }, delayMs);
-    this.countdowns.set(gameId, timer);
+  private async broadcast(code: string) {
+    const state = await this.games.getState(code);
+    this.broadcastState(state);
+    return this.withCountdown(state);
   }
 
-  onModuleDestroy() {
-    for (const timer of this.countdowns.values()) clearTimeout(timer);
-    this.countdowns.clear();
+  // Adds how long is left on the start countdown, if one is running. A duration rather than a
+  // clock time, so it doesn't depend on each phone's clock being right.
+  private withCountdown(state: GameState) {
+    const endsAt = this.startingSoon.get(state.code);
+    return { ...state, startingInMs: endsAt === undefined ? null : Math.max(0, endsAt - Date.now()) };
   }
 }
 

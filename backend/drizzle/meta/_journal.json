@@ -15,6 +15,13 @@
       "when": 1792776957086,
       "tag": "0001_game_start_countdown",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792777439606,
+      "tag": "0002_drop_starts_at",
+      "breakpoints": true
     }
   ]
 }

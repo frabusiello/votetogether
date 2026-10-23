@@ -8,7 +8,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { and, asc, count, eq, isNotNull, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { DB, type Db } from '../db/db.module.js';
 import { categories, gameItems, games, items, players, votes } from '../db/schema.js';
 
@@ -19,10 +19,6 @@ const MAX_ATTEMPTS = 5;
 
 // Every game uses this category until players can pick one.
 const DEFAULT_CATEGORY_SLUG = 'foods';
-
-// Pressing Start counts down before the first question, so an accidental tap can be cancelled.
-// Overridable so tests don't have to wait.
-const startCountdownMs = () => Number(process.env.START_COUNTDOWN_MS ?? 10_000);
 
 export const MAX_NAME_LENGTH = 20;
 export const MAX_PLAYERS = 20;
@@ -82,14 +78,15 @@ export class GamesService {
   }
 
   // Returns the player, and whether they're new to the game (so the game changed) or rejoined.
-  async join(code: string, rawName: unknown) {
+  // `startingSoon` closes the game to new players while the lobby counts down to the start.
+  async join(code: string, rawName: unknown, { startingSoon = false } = {}) {
     const name = typeof rawName === 'string' ? rawName.trim() : '';
     if (name.length < 1 || name.length > MAX_NAME_LENGTH) {
       throw new BadRequestException(`Name must be 1–${MAX_NAME_LENGTH} characters`);
     }
 
     const [game] = await this.db
-      .select({ id: games.id, status: games.status, startsAt: games.startsAt })
+      .select({ id: games.id, status: games.status })
       .from(games)
       .where(eq(games.code, code.toUpperCase()));
     if (!game) throw new NotFoundException(`No game with code ${code}`);
@@ -105,7 +102,7 @@ export class GamesService {
     const [existing] = await findPlayer();
     if (existing) return { player: existing, created: false };
     if (game.status !== 'lobby') throw new ConflictException('This game has already started');
-    if (game.startsAt) throw new ConflictException('This game is about to start');
+    if (startingSoon) throw new ConflictException('This game is about to start');
 
     // Two joins at the same moment could squeeze in a 21st player; that's fine for a party game.
     const [{ playerCount }] = await this.db
@@ -127,28 +124,17 @@ export class GamesService {
   }
 
   async getState(code: string) {
-    const loadGame = async () => {
-      const [row] = await this.db
-        .select({
-          id: games.id,
-          code: games.code,
-          status: games.status,
-          categoryId: games.categoryId,
-          currentItemIndex: games.currentItemIndex,
-          startsAt: games.startsAt,
-        })
-        .from(games)
-        .where(eq(games.code, code.toUpperCase()));
-      if (!row) throw new NotFoundException(`No game with code ${code}`);
-      return row;
-    };
-
-    let game = await loadGame();
-    // A countdown whose timer was lost (e.g. the server restarted) finishes the next time it's read.
-    if (game.status === 'lobby' && game.startsAt && game.startsAt <= new Date()) {
-      await this.finishCountdown(game.id);
-      game = await loadGame();
-    }
+    const [game] = await this.db
+      .select({
+        id: games.id,
+        code: games.code,
+        status: games.status,
+        categoryId: games.categoryId,
+        currentItemIndex: games.currentItemIndex,
+      })
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
 
     const [[category], gamePlayers, [currentItem], [{ total }]] = await Promise.all([
       game.categoryId === null
@@ -183,9 +169,6 @@ export class GamesService {
       code: game.code,
       status: game.status,
       category: category ?? null,
-      // Time left before the first question while the lobby counts down. Sent as a duration rather
-      // than a timestamp so it doesn't depend on each phone's clock being right.
-      startingInMs: game.startsAt ? Math.max(0, game.startsAt.getTime() - Date.now()) : null,
       players: gamePlayers,
       question: currentItem
         ? {
@@ -198,62 +181,59 @@ export class GamesService {
     };
   }
 
-  // Any player in the game can press Start in the lobby. That closes joining and begins a countdown;
-  // the caller schedules finishCountdown for when it runs out. Returns the state, the game's id
-  // and how long the countdown is.
-  async start(code: string, playerId: unknown) {
+  // Checks that a player can press Start: they're in the game and it's still in the lobby. The
+  // countdown itself runs on the screens; begin() moves the game on when it runs out.
+  async checkCanStart(code: string, playerId: unknown) {
     const game = await this.findGameForPlayer(code, playerId);
     if (game.status !== 'lobby') throw new ConflictException('This game has already started');
-
-    const countdownMs = startCountdownMs();
-    // Only a lobby that isn't already counting down, so two players pressing Start at once is fine.
-    const started = await this.db
-      .update(games)
-      .set({ startsAt: new Date(Date.now() + countdownMs) })
-      .where(and(eq(games.id, game.id), eq(games.status, 'lobby'), isNull(games.startsAt)))
-      .returning({ id: games.id });
-    if (started.length === 0) throw new ConflictException('This game is already starting');
-
-    return { state: await this.getState(code), gameId: game.id, countdownMs };
+    return game;
   }
 
-  // Any player in the game can stop the countdown, which reopens the lobby.
-  async cancelStart(code: string, playerId: unknown) {
-    const game = await this.findGameForPlayer(code, playerId);
-
-    const cancelled = await this.db
+  // Moves a lobby on to the first question. Returns the new state, or null if the game had already
+  // begun, so several screens finishing the countdown at once is fine.
+  async begin(code: string) {
+    const begun = await this.db
       .update(games)
-      .set({ startsAt: null })
-      .where(and(eq(games.id, game.id), eq(games.status, 'lobby'), isNotNull(games.startsAt)))
+      .set({ status: 'playing', currentItemIndex: 0 })
+      .where(and(eq(games.code, code.toUpperCase()), eq(games.status, 'lobby')))
       .returning({ id: games.id });
-    if (cancelled.length === 0) {
-      throw new ConflictException(
-        game.status === 'lobby' ? "The game isn't starting" : 'This game has already started',
-      );
-    }
-
-    return { state: await this.getState(code), gameId: game.id };
+    return begun.length > 0 ? this.getState(code) : null;
   }
 
-  // Moves a lobby whose countdown has run out on to the first question. Returns the game's code,
-  // or null if there was nothing to do (the countdown was cancelled or already finished).
-  async finishCountdown(gameId: number) {
+  // Moves on from question `fromNumber` (1-based) to the next one, or to the results after the last.
+  // Returns the new state, or null if the game is no longer on that question (someone else already
+  // moved it on).
+  async advance(code: string, fromNumber: unknown) {
+    if (!isWholeNumber(fromNumber)) throw new BadRequestException('questionNumber is required');
+
     const [game] = await this.db
+      .select({ id: games.id })
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(gameItems)
+      .where(eq(gameItems.gameId, game.id));
+
+    const next: Partial<typeof games.$inferInsert> =
+      fromNumber < total ? { currentItemIndex: fromNumber } : { status: 'results' };
+    const advanced = await this.db
       .update(games)
-      .set({ status: 'playing', currentItemIndex: 0, startsAt: null })
+      .set(next)
       .where(
         and(
-          eq(games.id, gameId),
-          eq(games.status, 'lobby'),
-          // A little slack so a timer that fires right on time isn't a hair too early for the DB.
-          lte(games.startsAt, new Date(Date.now() + 50)),
+          eq(games.id, game.id),
+          eq(games.status, 'playing'),
+          eq(games.currentItemIndex, fromNumber - 1),
         ),
       )
-      .returning({ code: games.code });
-    return game?.code ?? null;
+      .returning({ id: games.id });
+    return advanced.length > 0 ? this.getState(code) : null;
   }
 
-  private async findGameForPlayer(code: string, playerId: unknown) {
+  // Throws unless `playerId` is a player in the game.
+  async findGameForPlayer(code: string, playerId: unknown) {
     if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required');
 
     const [game] = await this.db

@@ -33,7 +33,6 @@ describe('GamesController (e2e)', () => {
         code: expect.stringMatching(/^[A-HJ-NP-Z]{4}$/),
         status: 'lobby',
         category: { name: 'Foods' },
-        startingInMs: null,
         players: [],
         question: {
           number: 1,
