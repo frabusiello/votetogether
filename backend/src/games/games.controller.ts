@@ -19,4 +19,13 @@ export class GamesController {
   join(@Param('code') code: string, @Body('name') name: unknown) {
     return this.games.join(code, name);
   }
+
+  @Post(':code/votes')
+  vote(
+    @Param('code') code: string,
+    @Body('playerId') playerId: unknown,
+    @Body('score') score: unknown,
+  ) {
+    return this.games.vote(code, playerId, score);
+  }
 }

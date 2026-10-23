@@ -5,7 +5,7 @@ import request from 'supertest';
 import { App } from 'supertest/types.js';
 import { AppModule } from './../src/app.module.js';
 import { DB, type Db } from './../src/db/db.module.js';
-import { games, players } from './../src/db/schema.js';
+import { games, players, votes } from './../src/db/schema.js';
 
 describe('GamesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -38,6 +38,7 @@ describe('GamesController (e2e)', () => {
           number: 1,
           total: expect.any(Number),
           item: { id: expect.any(Number), name: expect.any(String), imageUrl: null },
+          votedPlayerIds: [],
         },
       });
       expect(body.question.total).toBeGreaterThan(0);
@@ -127,6 +128,59 @@ describe('GamesController (e2e)', () => {
       await join(code, 'Ben').expect(409);
       const again = await join(code, 'Ana').expect(201);
       expect(again.body).toEqual(ana.body);
+    });
+  });
+
+  describe('/games/:code/votes (POST)', () => {
+    let code: string;
+    let gameId: number;
+    let anaId: number;
+
+    beforeEach(async () => {
+      const created = await request(app.getHttpServer()).post('/games').expect(201);
+      createdIds.push(created.body.id);
+      ({ code, id: gameId } = created.body);
+      const ana = await request(app.getHttpServer())
+        .post(`/games/${code}/players`)
+        .send({ name: 'Ana' })
+        .expect(201);
+      anaId = ana.body.id;
+    });
+
+    const vote = (body: object, gameCode = code) =>
+      request(app.getHttpServer()).post(`/games/${gameCode}/votes`).send(body);
+    const startGame = () => db.update(games).set({ status: 'playing' }).where(eq(games.id, gameId));
+
+    it('is closed while the game is in the lobby', async () => {
+      await vote({ playerId: anaId, score: 7 }).expect(409);
+    });
+
+    it('records a vote, shows who voted, and lets the player change it', async () => {
+      await startGame();
+      const first = await vote({ playerId: anaId, score: 7 }).expect(201);
+      expect(first.body).toEqual({ itemId: expect.any(Number), score: 7 });
+
+      const state = await request(app.getHttpServer()).get(`/games/${code}`).expect(200);
+      expect(state.body.question.votedPlayerIds).toEqual([anaId]);
+      expect(state.body.question.item.id).toBe(first.body.itemId);
+
+      await vote({ playerId: anaId, score: 9 }).expect(201);
+      const rows = await db.select({ score: votes.score }).from(votes).where(eq(votes.gameId, gameId));
+      expect(rows).toEqual([{ score: 9 }]);
+    });
+
+    it('rejects scores outside 1–10 and missing players', async () => {
+      await startGame();
+      for (const score of [0, 11, 7.5, '7', undefined]) {
+        await vote({ playerId: anaId, score }).expect(400);
+      }
+      await vote({ score: 7 }).expect(400);
+    });
+
+    it('rejects players who are not in the game', async () => {
+      await startGame();
+      await vote({ playerId: anaId + 100_000, score: 7 }).expect(404);
+      await vote({ playerId: anaId, score: 7 }, 'NOPE').expect(404);
     });
   });
 

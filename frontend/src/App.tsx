@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import {
+  castVote,
   clearHostedGameCode,
   clearPlayerSeat,
   createGame,
@@ -12,8 +13,10 @@ import {
   joinGame,
   type Player,
   type PlayerSeat,
+  type Question,
   saveHostedGameCode,
   savePlayerSeat,
+  VoteError,
 } from './game'
 import './App.css'
 
@@ -102,7 +105,7 @@ function App() {
 
     case 'player':
       return (
-        <PlayerLobbyScreen
+        <PlayerScreen
           game={screen.game}
           player={screen.player}
           onLeave={() => {
@@ -268,15 +271,113 @@ function JoinScreen({
   )
 }
 
-function PlayerLobbyScreen({
-  game,
+type PlayerScreenProps = { game: Game; player: Player; onLeave: () => void }
+
+// A player's phone screen for a game, which depends on how far along the game is.
+function PlayerScreen(props: PlayerScreenProps) {
+  const { game, player } = props
+  switch (game.status) {
+    case 'lobby':
+      return <PlayerLobbyScreen {...props} />
+    case 'playing':
+      return game.question ? (
+        // Keyed by question so the picked score resets when the question changes.
+        <VoteScreen
+          key={game.question.number}
+          code={game.code}
+          player={player}
+          question={game.question}
+        />
+      ) : (
+        <main className="screen">
+          <p>This game has no questions.</p>
+        </main>
+      )
+    case 'results':
+      return (
+        <main className="screen">
+          <h1>That's a wrap!</h1>
+          <p>Check the TV to see how everyone voted.</p>
+        </main>
+      )
+  }
+}
+
+const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+function VoteScreen({
+  code,
   player,
-  onLeave,
+  question,
 }: {
-  game: Game
+  code: string
   player: Player
-  onLeave: () => void
+  question: Question
 }) {
+  // The score this phone sent. After a refresh it's unknown, but the server still says they voted.
+  const [score, setScore] = useState<number | null>(null)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const voted = score !== null || question.votedPlayerIds.includes(player.id)
+
+  async function handleVote(value: number) {
+    setSending(true)
+    setError(null)
+    try {
+      const vote = await castVote(code, player.id, value)
+      setScore(vote.score)
+    } catch (err) {
+      setError(
+        err instanceof VoteError
+          ? err.message
+          : "Couldn't send your vote. Check the connection and try again.",
+      )
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <main className="screen">
+      <p className="question-number">
+        Question {question.number} of {question.total}
+      </p>
+      <h1 className="vote-name">{question.item.name}</h1>
+      <div className="scale" role="group" aria-label="Your score from 1 to 10">
+        {SCORES.map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={value === score ? 'selected' : undefined}
+            aria-pressed={value === score}
+            disabled={sending}
+            onClick={() => handleVote(value)}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+      <div className="scale-labels" aria-hidden="true">
+        <span>Hate it</span>
+        <span>Love it</span>
+      </div>
+      <p role="status">
+        {score !== null
+          ? `You voted ${score}. Tap another number to change it.`
+          : voted
+            ? 'Your vote is in. Tap a number to change it.'
+            : 'Tap a number to vote.'}
+      </p>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+    </main>
+  )
+}
+
+function PlayerLobbyScreen({ game, player, onLeave }: PlayerScreenProps) {
   return (
     <main className="screen">
       <h1>You're in, {player.name}!</h1>
@@ -345,7 +446,7 @@ function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => voi
   )
 }
 
-function QuestionScreen({ question }: { question: NonNullable<Game['question']> }) {
+function QuestionScreen({ question }: { question: Question }) {
   const { item } = question
   return (
     <main className="screen">

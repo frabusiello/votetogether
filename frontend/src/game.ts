@@ -8,7 +8,15 @@ export type Game = {
   status: 'lobby' | 'playing' | 'results'
   category: { name: string } | null
   players: Player[]
-  question: { number: number; total: number; item: Item } | null
+  question: Question | null
+}
+
+export type Question = {
+  number: number
+  total: number
+  item: Item
+  // Who has voted on this question so far. Scores stay hidden until the results.
+  votedPlayerIds: number[]
 }
 
 // The game this browser is hosting, so the TV can get back to it after a refresh or a dropped
@@ -57,17 +65,38 @@ export class GameNotFoundError extends Error {}
 export class JoinError extends Error {}
 
 export async function joinGame(code: string, name: string): Promise<Player> {
-  const res = await fetch(`/api/games/${encodeURIComponent(code)}/players`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  })
+  const res = await postJson(`/api/games/${encodeURIComponent(code)}/players`, { name })
   if ([400, 404, 409].includes(res.status)) {
-    const body: { message?: string } = await res.json().catch(() => ({}))
-    throw new JoinError(body.message ?? "Couldn't join that game")
+    throw new JoinError(await errorMessage(res, "Couldn't join that game"))
   }
   if (!res.ok) throw new Error(`Joining game ${code} failed with ${res.status}`)
   return res.json()
+}
+
+// A vote the server refused (voting closed, not in the game, bad score), with its reason.
+export class VoteError extends Error {}
+
+export async function castVote(code: string, playerId: number, score: number) {
+  const res = await postJson(`/api/games/${encodeURIComponent(code)}/votes`, { playerId, score })
+  if ([400, 404, 409].includes(res.status)) {
+    throw new VoteError(await errorMessage(res, "Couldn't record your vote"))
+  }
+  if (!res.ok) throw new Error(`Voting in game ${code} failed with ${res.status}`)
+  const vote: { itemId: number; score: number } = await res.json()
+  return vote
+}
+
+function postJson(url: string, body: unknown) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+async function errorMessage(res: Response, fallback: string) {
+  const body: { message?: string } = await res.json().catch(() => ({}))
+  return body.message ?? fallback
 }
 
 export async function createGame(): Promise<Game> {

@@ -176,6 +176,57 @@
   }
 }
 
+.vote-name {
+  margin: 0;
+}
+
+.scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: min(420px, 100%);
+
+  button {
+    font: inherit;
+    font-size: 26px;
+    font-weight: 700;
+    aspect-ratio: 1;
+    border-radius: 14px;
+    border: 2px solid var(--accent-border);
+    color: var(--accent);
+    background: var(--accent-bg);
+    cursor: pointer;
+    transition:
+      transform 0.1s,
+      background 0.2s;
+
+    &:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    &:disabled {
+      opacity: 0.6;
+      cursor: progress;
+    }
+    &.selected {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  width: min(420px, 100%);
+  margin-top: -12px;
+  font-size: 14px;
+}
+
 .error {
   color: #d93f3f;
 

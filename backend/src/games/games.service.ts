@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { DB, type Db } from '../db/db.module.js';
-import { categories, gameItems, games, items, players } from '../db/schema.js';
+import { categories, gameItems, games, items, players, votes } from '../db/schema.js';
 
 // No I or O, so codes can't be misread as 1 or 0 on the TV.
 export const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -22,6 +22,9 @@ const DEFAULT_CATEGORY_SLUG = 'foods';
 
 export const MAX_NAME_LENGTH = 20;
 export const MAX_PLAYERS = 20;
+// Matches the votes_score_range check in the schema.
+const MIN_SCORE = 1;
+const MAX_SCORE = 10;
 
 export function generateCode(): string {
   let code = '';
@@ -30,6 +33,8 @@ export function generateCode(): string {
   }
   return code;
 }
+
+const isWholeNumber = (value: unknown): value is number => Number.isInteger(value);
 
 @Injectable()
 export class GamesService {
@@ -147,6 +152,14 @@ export class GamesService {
       this.db.select({ total: count() }).from(gameItems).where(eq(gameItems.gameId, game.id)),
     ]);
 
+    // Who has voted on the current question, but not how, so scores stay hidden until results.
+    const voters = currentItem
+      ? await this.db
+          .select({ playerId: votes.playerId })
+          .from(votes)
+          .where(and(eq(votes.gameId, game.id), eq(votes.itemId, currentItem.id)))
+      : [];
+
     return {
       id: game.id,
       code: game.code,
@@ -154,8 +167,48 @@ export class GamesService {
       category: category ?? null,
       players: gamePlayers,
       question: currentItem
-        ? { number: game.currentItemIndex + 1, total, item: currentItem }
+        ? {
+            number: game.currentItemIndex + 1,
+            total,
+            item: currentItem,
+            votedPlayerIds: voters.map((v) => v.playerId),
+          }
         : null,
     };
+  }
+
+  // Records a player's 1–10 score for the game's current question. Voting again changes the score.
+  async vote(code: string, playerId: unknown, score: unknown) {
+    if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required');
+    if (!isWholeNumber(score) || score < MIN_SCORE || score > MAX_SCORE) {
+      throw new BadRequestException(`Score must be a whole number from ${MIN_SCORE} to ${MAX_SCORE}`);
+    }
+
+    const [game] = await this.db
+      .select({ id: games.id, status: games.status, currentItemIndex: games.currentItemIndex })
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
+    if (game.status !== 'playing') throw new ConflictException("Voting isn't open right now");
+
+    const [[player], [current]] = await Promise.all([
+      this.db
+        .select({ id: players.id })
+        .from(players)
+        .where(and(eq(players.id, playerId), eq(players.gameId, game.id))),
+      this.db
+        .select({ itemId: gameItems.itemId })
+        .from(gameItems)
+        .where(and(eq(gameItems.gameId, game.id), eq(gameItems.position, game.currentItemIndex))),
+    ]);
+    if (!player) throw new NotFoundException("You're not in this game");
+    if (!current) throw new ConflictException('There is no question to vote on');
+
+    const [vote] = await this.db
+      .insert(votes)
+      .values({ gameId: game.id, playerId, itemId: current.itemId, score })
+      .onConflictDoUpdate({ target: [votes.playerId, votes.itemId], set: { score } })
+      .returning({ itemId: votes.itemId, score: votes.score });
+    return vote;
   }
 }
