@@ -21,6 +21,7 @@ const MAX_ATTEMPTS = 5;
 const DEFAULT_CATEGORY_SLUG = 'foods';
 
 export const MAX_NAME_LENGTH = 20;
+export const MAX_PLAYERS = 20;
 
 export function generateCode(): string {
   let code = '';
@@ -94,6 +95,15 @@ export class GamesService {
     const [existing] = await findPlayer();
     if (existing) return existing;
     if (game.status !== 'lobby') throw new ConflictException('This game has already started');
+
+    // Two joins at the same moment could squeeze in a 21st player; that's fine for a party game.
+    const [{ playerCount }] = await this.db
+      .select({ playerCount: count() })
+      .from(players)
+      .where(eq(players.gameId, game.id));
+    if (playerCount >= MAX_PLAYERS) {
+      throw new ConflictException(`This game is full (${MAX_PLAYERS} players)`);
+    }
 
     const [created] = await this.db
       .insert(players)

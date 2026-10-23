@@ -109,6 +109,17 @@ describe('GamesController (e2e)', () => {
       await join('NOPE', 'Ana').expect(404);
     });
 
+    it('turns away new players once the game has 20, but lets existing ones rejoin', async () => {
+      const [{ id }] = await db.select({ id: games.id }).from(games).where(eq(games.code, code));
+      await db
+        .insert(players)
+        .values(Array.from({ length: 20 }, (_, i) => ({ gameId: id, name: `Player ${i + 1}` })));
+
+      const full = await join(code, 'Ana').expect(409);
+      expect(full.body.message).toBe('This game is full (20 players)');
+      await join(code, 'Player 7').expect(201);
+    });
+
     it('lets existing players rejoin a started game, but not new ones', async () => {
       const ana = await join(code, 'Ana').expect(201);
       await db.update(games).set({ status: 'playing' }).where(eq(games.code, code));
