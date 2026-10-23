@@ -238,6 +238,40 @@
   }
 }
 
+/* Voting slaps the tag down like a sticker: it comes in big and lifted, lands, and squashes a
+   little. Uses `scale` rather than `transform`, so each tag keeps its tilt. */
+@media (prefers-reduced-motion: no-preference) {
+  .players.votes li.voted {
+    position: relative;
+    animation: sticker-slap 0.45s cubic-bezier(0.5, 0, 0.75, 0) both;
+  }
+}
+
+@keyframes sticker-slap {
+  0% {
+    scale: 2.6;
+    rotate: -8deg;
+    opacity: 0;
+    box-shadow: 14px 18px 0 rgb(0 0 0 / 0);
+    z-index: 2;
+  }
+  55% {
+    scale: 1;
+    rotate: 0deg;
+    opacity: 1;
+    box-shadow: 1px 1px 0 var(--ink);
+    animation-timing-function: ease-out;
+  }
+  75% {
+    scale: 1.08 0.92;
+  }
+  100% {
+    scale: 1;
+    box-shadow: var(--shadow);
+    z-index: 2;
+  }
+}
+
 /* On the results, a player who isn't connected right now. */
 .players.votes li.away {
   opacity: 0.45;
