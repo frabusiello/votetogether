@@ -21,6 +21,18 @@ npm run dev        # runs backend and frontend together
 
 Open http://localhost:5173.
 
+## Database
+
+The backend connects using the `VOTE_TOGETHER_PG_URL` connection string from your shell env
+(e.g. `postgres://user:pass@localhost:5432/vote_together`). The schema is defined with Drizzle in
+`backend/src/db/schema.ts`. To set up the database, run this in `backend/`:
+
+```sh
+npm run db:migrate && npm run db:seed
+```
+
+After changing the schema, run `npm run db:generate` to create a new migration.
+
 ## Scripts
 
 - `npm run dev` — start both apps in watch mode

@@ -21,7 +21,10 @@ const seed: Record<string, { name: string; items: string[] }> = {
   },
 };
 
-const pool = new pg.Pool({ database: process.env.PGDATABASE ?? 'vote_together' });
+const url = process.env.VOTE_TOGETHER_PG_URL;
+if (!url) throw new Error('VOTE_TOGETHER_PG_URL is not set');
+
+const pool = new pg.Pool({ connectionString: url });
 const db = drizzle(pool);
 
 try {

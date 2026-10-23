@@ -13,9 +13,12 @@ const PG_POOL = Symbol('PG_POOL');
   providers: [
     {
       provide: PG_POOL,
-      // pg reads PGHOST, PGPORT, PGUSER and PGPASSWORD from the environment.
-      useFactory: () =>
-        new pg.Pool({ database: process.env.PGDATABASE ?? 'vote_together' }),
+      // Connection string lives in the shell env, never in the repo.
+      useFactory: () => {
+        const url = process.env.VOTE_TOGETHER_PG_URL;
+        if (!url) throw new Error('VOTE_TOGETHER_PG_URL is not set');
+        return new pg.Pool({ connectionString: url });
+      },
     },
     {
       provide: DB,
