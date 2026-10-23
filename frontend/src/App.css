@@ -76,6 +76,49 @@
   }
 }
 
+.join-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: min(360px, 100%);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+
+  input {
+    font: inherit;
+    font-size: 22px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    color: var(--text-h);
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+
+  .code-input {
+    font-family: var(--mono);
+    font-size: 32px;
+    letter-spacing: 0.3em;
+    text-align: center;
+  }
+
+  .actions {
+    margin-top: 8px;
+  }
+}
+
 .players {
   list-style: none;
   padding: 0;

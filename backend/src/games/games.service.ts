@@ -1,12 +1,14 @@
 import { randomInt } from 'node:crypto';
 import {
+  BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { and, asc, count, eq } from 'drizzle-orm';
+import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { DB, type Db } from '../db/db.module.js';
 import { categories, gameItems, games, items, players } from '../db/schema.js';
 
@@ -17,6 +19,8 @@ const MAX_ATTEMPTS = 5;
 
 // Every game uses this category until players can pick one.
 const DEFAULT_CATEGORY_SLUG = 'foods';
+
+export const MAX_NAME_LENGTH = 20;
 
 export function generateCode(): string {
   let code = '';
@@ -65,6 +69,39 @@ export class GamesService {
       if (code) return this.getState(code);
     }
     throw new ServiceUnavailableException('Could not allocate a game code, try again');
+  }
+
+  async join(code: string, rawName: unknown) {
+    const name = typeof rawName === 'string' ? rawName.trim() : '';
+    if (name.length < 1 || name.length > MAX_NAME_LENGTH) {
+      throw new BadRequestException(`Name must be 1–${MAX_NAME_LENGTH} characters`);
+    }
+
+    const [game] = await this.db
+      .select({ id: games.id, status: games.status })
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
+
+    // There are no accounts, so a name is the player's identity: joining with a name that's
+    // already in the game (in any case) rejoins as that player, e.g. after losing the cookie.
+    const findPlayer = () =>
+      this.db
+        .select({ id: players.id, name: players.name })
+        .from(players)
+        .where(and(eq(players.gameId, game.id), sql`lower(${players.name}) = lower(${name})`));
+
+    const [existing] = await findPlayer();
+    if (existing) return existing;
+    if (game.status !== 'lobby') throw new ConflictException('This game has already started');
+
+    const [created] = await this.db
+      .insert(players)
+      .values({ gameId: game.id, name })
+      .onConflictDoNothing({ target: [players.gameId, players.name] })
+      .returning({ id: players.id, name: players.name });
+    // Someone else took the name between the lookup and the insert: they're the same player.
+    return created ?? (await findPlayer())[0];
   }
 
   async getState(code: string) {

@@ -1,53 +1,82 @@
-import { useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import {
   clearHostedGameCode,
+  clearPlayerSeat,
   createGame,
   fetchGame,
   type Game,
   GameNotFoundError,
   getHostedGameCode,
+  getPlayerSeat,
+  JoinError,
+  joinGame,
+  type Player,
+  type PlayerSeat,
   saveHostedGameCode,
+  savePlayerSeat,
 } from './game'
 import './App.css'
+
+// A game saved in a cookie that this browser can reconnect to, either as the TV or as a player.
+type SavedGame = { as: 'host'; code: string } | { as: 'player'; seat: PlayerSeat }
 
 type Screen =
   | { name: 'home' }
   | { name: 'join' }
-  | { name: 'restoring'; code: string }
-  | { name: 'offline'; code: string }
+  | { name: 'restoring'; saved: SavedGame }
+  | { name: 'offline'; saved: SavedGame }
   | { name: 'game'; game: Game }
+  | { name: 'player'; game: Game; player: Player }
+
+function getSavedGame(): SavedGame | null {
+  const code = getHostedGameCode()
+  if (code) return { as: 'host', code }
+  const seat = getPlayerSeat()
+  return seat ? { as: 'player', seat } : null
+}
+
+function savedCode(saved: SavedGame) {
+  return saved.as === 'host' ? saved.code : saved.seat.code
+}
 
 function App() {
   const [screen, setScreen] = useState<Screen>(() => {
-    const code = getHostedGameCode()
-    return code ? { name: 'restoring', code } : { name: 'home' }
+    const saved = getSavedGame()
+    return saved ? { name: 'restoring', saved } : { name: 'home' }
   })
 
-  // Reconnect to the game saved in the cookie. Only a 404 forgets it: a network error keeps it
-  // so the TV can retry once the connection is back.
-  function loadHostedGame(code: string) {
-    fetchGame(code)
-      .then((game) => setScreen({ name: 'game', game }))
+  // Reconnect to the game saved in a cookie. Only a missing game (or player) forgets it: a network
+  // error keeps it so the screen can retry once the connection is back.
+  function loadSavedGame(saved: SavedGame) {
+    const forget = () => {
+      if (saved.as === 'host') clearHostedGameCode()
+      else clearPlayerSeat()
+      setScreen({ name: 'home' })
+    }
+
+    fetchGame(savedCode(saved))
+      .then((game) => {
+        if (saved.as === 'host') return setScreen({ name: 'game', game })
+        const player = game.players.find((p) => p.id === saved.seat.playerId)
+        if (player) setScreen({ name: 'player', game, player })
+        else forget()
+      })
       .catch((err: unknown) => {
-        if (err instanceof GameNotFoundError) {
-          clearHostedGameCode()
-          setScreen({ name: 'home' })
-        } else {
-          setScreen({ name: 'offline', code })
-        }
+        if (err instanceof GameNotFoundError) forget()
+        else setScreen({ name: 'offline', saved })
       })
   }
 
   useEffect(() => {
-    const code = getHostedGameCode()
-    if (code) loadHostedGame(code)
+    const saved = getSavedGame()
+    if (saved) loadSavedGame(saved)
   }, [])
 
   switch (screen.name) {
     case 'restoring':
       return (
         <main className="screen">
-          <p>Reconnecting to game {screen.code}…</p>
+          <p>Reconnecting to game {savedCode(screen.saved)}…</p>
         </main>
       )
 
@@ -55,20 +84,32 @@ function App() {
       return (
         <main className="screen">
           <h1>Can't reach the server</h1>
-          <p>Your game {screen.code} is saved. Check the connection and try again.</p>
+          <p>Your game {savedCode(screen.saved)} is saved. Check the connection and try again.</p>
           <div className="actions">
             <button
               type="button"
               className="primary"
               onClick={() => {
-                setScreen({ name: 'restoring', code: screen.code })
-                loadHostedGame(screen.code)
+                setScreen({ name: 'restoring', saved: screen.saved })
+                loadSavedGame(screen.saved)
               }}
             >
               Retry
             </button>
           </div>
         </main>
+      )
+
+    case 'player':
+      return (
+        <PlayerLobbyScreen
+          game={screen.game}
+          player={screen.player}
+          onLeave={() => {
+            clearPlayerSeat()
+            setScreen({ name: 'home' })
+          }}
+        />
       )
 
     case 'game':
@@ -84,11 +125,16 @@ function App() {
 
     case 'join':
       return (
-        <main className="screen">
-          <h1>Join a game</h1>
-          <p>Joining with a code is coming soon.</p>
-          <BackButton onClick={() => setScreen({ name: 'home' })} />
-        </main>
+        <JoinScreen
+          onJoined={(seat) => {
+            // Load the game the same way as a reconnect, so a dropped connection right after
+            // joining lands on the Retry screen instead of losing the seat.
+            const saved: SavedGame = { as: 'player', seat }
+            setScreen({ name: 'restoring', saved })
+            loadSavedGame(saved)
+          }}
+          onBack={() => setScreen({ name: 'home' })}
+        />
       )
 
     case 'home':
@@ -141,6 +187,107 @@ function HomeScreen({
           {error}
         </p>
       )}
+    </main>
+  )
+}
+
+function JoinScreen({
+  onJoined,
+  onBack,
+}: {
+  onJoined: (seat: PlayerSeat) => void
+  onBack: () => void
+}) {
+  const [code, setCode] = useState('')
+  const [name, setName] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setJoining(true)
+    setError(null)
+    try {
+      const player = await joinGame(code, name)
+      const seat = { code, playerId: player.id }
+      savePlayerSeat(seat)
+      onJoined(seat)
+    } catch (err) {
+      setError(
+        err instanceof JoinError
+          ? err.message
+          : "Couldn't join. Check the connection and try again.",
+      )
+      setJoining(false)
+    }
+  }
+
+  return (
+    <main className="screen">
+      <h1>Join a game</h1>
+      <form className="join-form" onSubmit={handleSubmit}>
+        <label>
+          Game code
+          <input
+            className="code-input"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+            maxLength={4}
+            minLength={4}
+            required
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            placeholder="ABCD"
+          />
+        </label>
+        <label>
+          Your name
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={20}
+            required
+            autoComplete="nickname"
+            placeholder="Ana"
+          />
+        </label>
+        <div className="actions">
+          <button type="submit" className="primary" disabled={joining}>
+            {joining ? 'Joining…' : 'Join'}
+          </button>
+        </div>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+      </form>
+      <BackButton onClick={onBack} />
+    </main>
+  )
+}
+
+function PlayerLobbyScreen({
+  game,
+  player,
+  onLeave,
+}: {
+  game: Game
+  player: Player
+  onLeave: () => void
+}) {
+  return (
+    <main className="screen">
+      <h1>You're in, {player.name}!</h1>
+      <p>
+        Game <strong>{game.code}</strong>
+        {game.category && <> · {game.category.name}</>}
+      </p>
+      <p>Waiting for the game to start…</p>
+      <button type="button" className="link" onClick={onLeave}>
+        Leave
+      </button>
     </main>
   )
 }
