@@ -428,9 +428,11 @@ function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => voi
       <p className="tagline">
         Go to <strong>{window.location.host}</strong> and join with the code
       </p>
-      <p className="game-code" aria-label={`Game code ${game.code.split('').join(' ')}`}>
-        {game.code}
-      </p>
+      <div className="game-code" role="img" aria-label={`Game code ${game.code.split('').join(' ')}`}>
+        {game.code.split('').map((letter, i) => (
+          <span key={i}>{letter}</span>
+        ))}
+      </div>
       {game.category && (
         <p>
           Tonight: <strong>{game.category.name}</strong>
