@@ -1,7 +1,14 @@
+export type Player = { id: number; name: string }
+
+export type Item = { id: number; name: string; imageUrl: string | null }
+
 export type Game = {
   id: number
   code: string
   status: 'lobby' | 'playing' | 'results'
+  category: { name: string } | null
+  players: Player[]
+  question: { number: number; total: number; item: Item } | null
 }
 
 // The game this browser is hosting, so the TV can get back to it after a refresh or a dropped

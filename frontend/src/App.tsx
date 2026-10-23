@@ -15,7 +15,7 @@ type Screen =
   | { name: 'join' }
   | { name: 'restoring'; code: string }
   | { name: 'offline'; code: string }
-  | { name: 'lobby'; game: Game }
+  | { name: 'game'; game: Game }
 
 function App() {
   const [screen, setScreen] = useState<Screen>(() => {
@@ -27,7 +27,7 @@ function App() {
   // so the TV can retry once the connection is back.
   function loadHostedGame(code: string) {
     fetchGame(code)
-      .then((game) => setScreen({ name: 'lobby', game }))
+      .then((game) => setScreen({ name: 'game', game }))
       .catch((err: unknown) => {
         if (err instanceof GameNotFoundError) {
           clearHostedGameCode()
@@ -71,9 +71,9 @@ function App() {
         </main>
       )
 
-    case 'lobby':
+    case 'game':
       return (
-        <LobbyScreen
+        <GameScreen
           game={screen.game}
           onStartOver={() => {
             clearHostedGameCode()
@@ -94,7 +94,7 @@ function App() {
     case 'home':
       return (
         <HomeScreen
-          onCreated={(game) => setScreen({ name: 'lobby', game })}
+          onCreated={(game) => setScreen({ name: 'game', game })}
           onJoin={() => setScreen({ name: 'join' })}
         />
       )
@@ -145,6 +145,29 @@ function HomeScreen({
   )
 }
 
+// The shared TV screen for a game, which depends on how far along the game is.
+function GameScreen({ game, onStartOver }: { game: Game; onStartOver: () => void }) {
+  switch (game.status) {
+    case 'lobby':
+      return <LobbyScreen game={game} onStartOver={onStartOver} />
+    case 'playing':
+      return game.question ? (
+        <QuestionScreen question={game.question} />
+      ) : (
+        <main className="screen">
+          <p>This game has no questions.</p>
+        </main>
+      )
+    case 'results':
+      return (
+        <main className="screen">
+          <h1>Results</h1>
+          <p>Results are coming soon.</p>
+        </main>
+      )
+  }
+}
+
 function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => void }) {
   return (
     <main className="screen">
@@ -154,10 +177,43 @@ function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => voi
       <p className="game-code" aria-label={`Game code ${game.code.split('').join(' ')}`}>
         {game.code}
       </p>
-      <p>Waiting for players…</p>
+      {game.category && (
+        <p>
+          Tonight: <strong>{game.category.name}</strong>
+        </p>
+      )}
+      {game.players.length > 0 ? (
+        <ul className="players" aria-label="Players">
+          {game.players.map((player) => (
+            <li key={player.id}>{player.name}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>Waiting for players…</p>
+      )}
       <button type="button" className="link" onClick={onStartOver}>
         Start over
       </button>
+    </main>
+  )
+}
+
+function QuestionScreen({ question }: { question: NonNullable<Game['question']> }) {
+  const { item } = question
+  return (
+    <main className="screen">
+      <p className="question-number">
+        Question {question.number} of {question.total}
+      </p>
+      {item.imageUrl ? (
+        <img className="question-image" src={item.imageUrl} alt={item.name} />
+      ) : (
+        <div className="question-image placeholder" aria-hidden="true">
+          No picture yet
+        </div>
+      )}
+      <h1 className="question-name">{item.name}</h1>
+      <p>Vote 1–10 on your phone.</p>
     </main>
   )
 }

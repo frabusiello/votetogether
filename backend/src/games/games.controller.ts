@@ -12,6 +12,6 @@ export class GamesController {
 
   @Get(':code')
   findOne(@Param('code') code: string) {
-    return this.games.findByCode(code);
+    return this.games.getState(code);
   }
 }
