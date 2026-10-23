@@ -281,13 +281,8 @@ describe('GamesGateway (e2e)', () => {
         status: 'results',
         connectedPlayerIds: expect.arrayContaining([anaId, benId]),
         readyPlayerIds: [],
-        question: {
-          number: 1,
-          votes: [
-            { playerId: anaId, score: 7 },
-            { playerId: benId, score: 9 },
-          ],
-        },
+        // Unvoted questions come first, see the ordering test below.
+        question: { number: 1, votes: [] },
       });
 
       const anaReady = await tapNext(ana, anaId, 1);
@@ -298,6 +293,39 @@ describe('GamesGateway (e2e)', () => {
       const moved = await tapNext(ben, benId, 1);
       expect(moved.game).toMatchObject({ readyPlayerIds: [], question: { number: 2, votes: [] } });
       expect(await tapNext(ben, benId, 1)).toEqual({ game: null }); // A late tap changes nothing.
+    });
+
+    it('goes from the most agreed-on question to the most disputed, unvoted ones first', async () => {
+      const ana = await connectPhone(anaId);
+      const ben = await connectPhone(benId);
+      // Question 1 got 7 and 9. Question 2 gets 5 and 5, and the last question 1 and 10.
+      const voteOn = async (number: number, anaScore: number, benScore: number) => {
+        await db.update(games).set({ currentItemIndex: number - 1 }).where(eq(games.code, code));
+        await send('vote', { playerId: anaId, score: anaScore });
+        await send('vote', { playerId: benId, score: benScore });
+      };
+      await voteOn(2, 5, 5);
+      await voteOn(total, 1, 10);
+
+      const shown: { number: number; votes: { playerId: number; score: number }[] }[] = [];
+      let game = (await send('next', { questionNumber: total })).game;
+      for (let number = 1; number <= total; number++) {
+        shown.push({ number: game!.question!.number, votes: game!.question!.votes! });
+        await tapNext(ana, anaId, number);
+        game = (await tapNext(ben, benId, number)).game;
+      }
+
+      expect(shown.map((s) => s.number)).toEqual(Array.from({ length: total }, (_, i) => i + 1));
+      const scores = (anaScore: number, benScore: number) => [
+        { playerId: anaId, score: anaScore },
+        { playerId: benId, score: benScore },
+      ];
+      expect(shown.map((s) => s.votes)).toEqual([
+        ...Array.from({ length: total - 3 }, () => []),
+        scores(5, 5),
+        scores(7, 9),
+        scores(1, 10),
+      ]);
     });
 
     it("doesn't wait for players who dropped out", async () => {

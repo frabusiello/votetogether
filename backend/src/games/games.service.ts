@@ -152,7 +152,17 @@ export class GamesService {
         .select({ id: items.id, name: items.name, imageUrl: items.imageUrl })
         .from(gameItems)
         .innerJoin(items, eq(items.id, gameItems.itemId))
-        .where(and(eq(gameItems.gameId, game.id), eq(gameItems.position, game.currentItemIndex))),
+        .where(
+          and(
+            eq(gameItems.gameId, game.id),
+            eq(
+              gameItems.position,
+              game.status === 'results'
+                ? this.resultPosition(game.id, game.currentItemIndex)
+                : game.currentItemIndex,
+            ),
+          ),
+        ),
       this.db.select({ total: count() }).from(gameItems).where(eq(gameItems.gameId, game.id)),
     ]);
 
@@ -171,8 +181,7 @@ export class GamesService {
       category: category ?? null,
       players: gamePlayers,
       // While playing, the question being voted on; in the results, the question whose votes are
-      // showing. Results go in question order for now: this is the place to sort them later (e.g.
-      // most agreed-on first).
+      // showing, and `number` is its place in the results order (see resultPosition).
       question: currentItem
         ? {
             number: game.currentItemIndex + 1,
@@ -184,6 +193,23 @@ export class GamesService {
           }
         : null,
     };
+  }
+
+  // The results go from the question people agreed on most to the one they disagreed on most:
+  // ordered by the spread of the scores (their standard deviation), ties in question order, and
+  // questions nobody voted on first, as there's nothing to argue about. Returns a subquery for the position of the question shown
+  // `rank`th (0-based). Votes can't change once the results start, so the order stays put.
+  private resultPosition(gameId: number, rank: number) {
+    const spread = sql`stddev_pop(${votes.score})`;
+    return this.db
+      .select({ position: gameItems.position })
+      .from(gameItems)
+      .leftJoin(votes, and(eq(votes.gameId, gameItems.gameId), eq(votes.itemId, gameItems.itemId)))
+      .where(eq(gameItems.gameId, gameId))
+      .groupBy(gameItems.position)
+      .orderBy(sql`${spread} asc nulls first`, asc(gameItems.position))
+      .limit(1)
+      .offset(rank);
   }
 
   // Checks that a player can press Start: they're in the game and it's still in the lobby. The

@@ -86,8 +86,11 @@ address, so set `PUBLIC_URL` in that case.
    sees who voted what. Each phone shows that player's own score and a **Next** button. Tapping it
    can't be undone. Once every *connected* player has tapped it, everyone moves straight on to the
    next question's results, with no countdown. Players who have dropped out don't hold the others
-   up. The results go in question order for now; ordering them by how much people agreed is
-   planned.
+   up. The results go from the question people agreed on most to the one they disagreed on most,
+   saving the arguments for the end. Agreement is the spread of the scores (their standard
+   deviation): everyone giving 5 has no spread, a 1 and a 10 has a lot. Ties keep question order,
+   and questions nobody voted on come first, since there's nothing to argue about. The order is worked out from the votes each time,
+   with nothing extra stored, which is safe because votes can't change once the results start.
 
 The TV and the phones each remember their game in a cookie (`vt_hosted_game` for the TV,
 `vt_player` for a phone), so a refresh or a dropped connection drops them back into the game.
