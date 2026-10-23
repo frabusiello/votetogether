@@ -5,6 +5,7 @@ import {
   createGame,
   fetchGame,
   type Game,
+  type Item,
   GameNotFoundError,
   getHostedGameCode,
   getPlayerSeat,
@@ -703,12 +704,8 @@ function QuestionScreen({
           doneLabel={isLast ? 'Here come the results!' : 'Next question!'}
           onDone={() => nextQuestion(send, code, question.number).catch(() => {})}
         />
-      ) : item.imageUrl ? (
-        <img className="question-image" src={item.imageUrl} alt={item.name} />
       ) : (
-        <div className="question-image placeholder" aria-hidden="true">
-          No picture yet
-        </div>
+        <QuestionImage item={item} />
       )}
       <h1 className="question-name">{item.name}</h1>
       <p>
@@ -747,17 +744,22 @@ function ResultsScreen({ game, question }: { game: Game; question: Question }) {
       <p className="question-number">
         Results · {question.number} of {question.total}
       </p>
-      <h1 className="question-name">{question.item.name}</h1>
-      <p>
-        {average === null ? (
-          'Nobody voted on this one.'
-        ) : (
-          <>
-            Average <strong>{average.toFixed(1)}</strong> from {votes.length}{' '}
-            {votes.length === 1 ? 'vote' : 'votes'}
-          </>
-        )}
-      </p>
+      <div className="results-header">
+        <QuestionImage item={question.item} className="results-image" />
+        <div>
+          <h1 className="question-name">{question.item.name}</h1>
+          <p>
+            {average === null ? (
+              'Nobody voted on this one.'
+            ) : (
+              <>
+                Average <strong>{average.toFixed(1)}</strong> from {votes.length}{' '}
+                {votes.length === 1 ? 'vote' : 'votes'}
+              </>
+            )}
+          </p>
+        </div>
+      </div>
       {/* --rows lets the tags shrink when one score gets a tall stack. */}
       <figure className="name-chart" style={{ '--rows': tallest } as CSSProperties}>
         <div className="name-chart-columns">
@@ -767,6 +769,7 @@ function ResultsScreen({ game, question }: { game: Game; question: Question }) {
               <div
                 key={i}
                 className={`name-chart-column score-${i + 1}`}
+                data-score={i + 1}
                 role="group"
                 aria-label={`${i + 1}: ${voters.length ? voters.join(', ') : 'nobody'}`}
               >
@@ -855,6 +858,7 @@ function PlayerResultsScreen({
       <p className="question-number">
         Results · {question.number} of {question.total}
       </p>
+      <QuestionImage item={question.item} className="results-image" />
       <h1 className="vote-name">{question.item.name}</h1>
       {myScore === null ? (
         <p>You didn't vote on this one.</p>
@@ -891,6 +895,18 @@ function PlayerResultsScreen({
         </p>
       )}
     </main>
+  )
+}
+
+// The question's picture, or a placeholder for items that don't have one yet.
+function QuestionImage({ item, className }: { item: Item; className?: string }) {
+  const classes = className ? `question-image ${className}` : 'question-image'
+  return item.imageUrl ? (
+    <img className={classes} src={item.imageUrl} alt={item.name} />
+  ) : (
+    <div className={`${classes} placeholder`} aria-hidden="true">
+      No picture yet
+    </div>
   )
 }
 

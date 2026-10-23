@@ -247,7 +247,8 @@
    built up from the baseline. --rows (the tallest stack) shrinks the tags so up to 20 players fit. */
 .name-chart {
   margin: 0;
-  width: min(1000px, 100%);
+  /* As wide as the TV allows: the columns need room for names up to 20 characters. */
+  width: min(1600px, 100%);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -257,7 +258,7 @@
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
   align-items: end;
-  gap: 6px;
+  gap: 10px;
   min-height: 120px;
   padding: 0 4px;
   border-bottom: var(--outline);
@@ -266,36 +267,123 @@
 .name-chart-column {
   display: flex;
   flex-direction: column-reverse;
-  gap: 2px;
-  padding-bottom: 2px;
+  gap: 8px;
+  padding-bottom: 8px;
+  /* Lets the tags size their text to the column's width (cqi units). */
+  container-type: inline-size;
 }
 
+/* Name tags in the lobby's style: chunky ink outline, hard shadow and a slight alternating slant,
+   coloured by the score they gave. Every tag is the same height, two lines of text, so a column's
+   height stays true to its count.
+   The text shrinks to fit names up to 20 characters across those two lines in the column's width
+   (12cqi), and when a tall stack needs the room (--rows). */
 .name-chart-tag {
+  --tag-font: min(17px, 12cqi, calc(44svh / var(--rows) * 0.4));
   display: flex;
   align-items: center;
   justify-content: center;
-  height: min(34px, calc(44svh / var(--rows)));
-  padding: 0 4px;
+  box-sizing: border-box;
+  height: calc(var(--tag-font) * 2.2 + 12px);
+  padding: 3px 4px;
   overflow: hidden;
-  font-size: min(17px, calc(44svh / var(--rows) * 0.55));
+  font-size: var(--tag-font);
   font-weight: 800;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: anywhere;
   color: var(--score-ink);
   background: var(--score-color);
-  border: 2px solid var(--ink);
-  border-radius: 4px;
+  border: var(--outline);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
 
-  @media (max-width: 700px) {
-    font-size: min(12px, calc(44svh / var(--rows) * 0.5));
-    padding: 0 2px;
+  &:nth-child(3n + 1) {
+    transform: rotate(-2deg);
   }
+  &:nth-child(3n + 2) {
+    transform: rotate(1.5deg);
+  }
+  &:nth-child(3n) {
+    transform: rotate(-0.5deg);
+  }
+}
+
+/* On narrow screens ten columns can't fit names, so the chart turns on its side: a row per score,
+   labelled with the score, with the names flowing along it. */
+@media (max-width: 800px) {
+  .name-chart-columns {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0;
+    border-bottom: none;
+    border-left: var(--outline);
+  }
+
+  .name-chart-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    min-height: 34px;
+    /* Room for the score label, so names that wrap onto a second line stay clear of it. */
+    padding: 4px 0 4px 44px;
+    container-type: normal;
+
+    &::before {
+      content: attr(data-score);
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 40px;
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-h);
+      text-align: center;
+    }
+  }
+
+  .name-chart-tag {
+    --tag-font: 15px;
+    height: auto;
+    padding: 4px 10px;
+  }
+
+  .name-chart-axis {
+    display: none;
+  }
+}
+
+/* The question's picture beside its name on the results. */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  text-align: left;
+
+  .question-name {
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 800px) {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+}
+
+.question-image.results-image {
+  height: min(180px, 17svh);
 }
 
 .name-chart-axis {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
-  gap: 6px;
+  gap: 10px;
   padding: 0 4px;
   font-family: var(--display);
   font-size: 20px;
