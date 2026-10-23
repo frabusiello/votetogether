@@ -8,7 +8,11 @@ import { AppModule } from './../src/app.module.js';
 import { DB, type Db } from './../src/db/db.module.js';
 import { games } from './../src/db/schema.js';
 
-type GameState = { code: string; players: { id: number; name: string }[] };
+type GameState = {
+  code: string;
+  players: { id: number; name: string }[];
+  question: { votedPlayerIds: number[] } | null;
+};
 
 describe('GamesGateway (e2e)', () => {
   let app: INestApplication<App>;
@@ -60,6 +64,28 @@ describe('GamesGateway (e2e)', () => {
     const onGame = vi.fn();
     socket.on('game', onGame);
     await join('ana');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(onGame).not.toHaveBeenCalled();
+  });
+
+  it("pushes the updated game when a player first votes, but not when they change their vote", async () => {
+    const ana = await join('Ana');
+    await db.update(games).set({ status: 'playing' }).where(eq(games.code, code));
+    await watch(code);
+    const vote = (score: number) =>
+      request(app.getHttpServer())
+        .post(`/games/${code}/votes`)
+        .send({ playerId: ana.body.id, score })
+        .expect(201);
+
+    const update = nextUpdate();
+    const first = await vote(7);
+    expect(first.body).toEqual({ itemId: expect.any(Number), score: 7 });
+    expect((await update).question?.votedPlayerIds).toEqual([ana.body.id]);
+
+    const onGame = vi.fn();
+    socket.on('game', onGame);
+    await vote(9);
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(onGame).not.toHaveBeenCalled();
   });

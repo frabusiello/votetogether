@@ -180,6 +180,7 @@ export class GamesService {
   }
 
   // Records a player's 1–10 score for the game's current question. Voting again changes the score.
+  // Returns the vote, and whether it's the player's first on this question.
   async vote(code: string, playerId: unknown, score: unknown) {
     if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required');
     if (!isWholeNumber(score) || score < MIN_SCORE || score > MAX_SCORE) {
@@ -206,11 +207,13 @@ export class GamesService {
     if (!player) throw new NotFoundException("You're not in this game");
     if (!current) throw new ConflictException('There is no question to vote on');
 
-    const [vote] = await this.db
+    const [{ created, ...vote }] = await this.db
       .insert(votes)
       .values({ gameId: game.id, playerId, itemId: current.itemId, score })
       .onConflictDoUpdate({ target: [votes.playerId, votes.itemId], set: { score } })
-      .returning({ itemId: votes.itemId, score: votes.score });
-    return vote;
+      // Postgres sets xmax to 0 on a fresh insert and non-zero when the upsert updated a row.
+      .returning({ itemId: votes.itemId, score: votes.score, created: sql<boolean>`xmax = 0` });
+    // Whether this is the player's first vote on the question (so who has voted changed).
+    return { vote, created };
   }
 }

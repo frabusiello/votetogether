@@ -200,6 +200,38 @@
   }
 }
 
+/* On the question screen the tags start as dashed outlines and fill in with a tick on voting. */
+.players.votes li {
+  transition:
+    background 0.2s,
+    transform 0.2s;
+
+  &:not(.voted) {
+    color: var(--text);
+    background: transparent;
+    border-style: dashed;
+    box-shadow: none;
+    opacity: 0.75;
+  }
+  &.voted {
+    color: #3a2a20;
+    background: var(--mustard);
+
+    &::after {
+      content: ' ✓';
+    }
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .question-number {
   font-size: 18px;
   font-weight: 800;

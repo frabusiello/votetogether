@@ -28,11 +28,14 @@ export class GamesController {
   }
 
   @Post(':code/votes')
-  vote(
+  async vote(
     @Param('code') code: string,
     @Body('playerId') playerId: unknown,
     @Body('score') score: unknown,
   ) {
-    return this.games.vote(code, playerId, score);
+    const { vote, created } = await this.games.vote(code, playerId, score);
+    // Let the TV tick off the player. Changing a vote doesn't change who has voted.
+    if (created) this.gateway.broadcastState(await this.games.getState(code));
+    return vote;
   }
 }

@@ -436,7 +436,7 @@ function GameScreen({ game, onStartOver }: { game: Game; onStartOver: () => void
       return <LobbyScreen game={game} onStartOver={onStartOver} />
     case 'playing':
       return game.question ? (
-        <QuestionScreen question={game.question} />
+        <QuestionScreen question={game.question} players={game.players} />
       ) : (
         <main className="screen">
           <p>This game has no questions.</p>
@@ -484,8 +484,9 @@ function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => voi
   )
 }
 
-function QuestionScreen({ question }: { question: Question }) {
+function QuestionScreen({ question, players }: { question: Question; players: Player[] }) {
   const { item } = question
+  const voted = new Set(question.votedPlayerIds)
   return (
     <main className="screen">
       <p className="question-number">
@@ -499,7 +500,20 @@ function QuestionScreen({ question }: { question: Question }) {
         </div>
       )}
       <h1 className="question-name">{item.name}</h1>
-      <p>Vote 1–10 on your phone.</p>
+      <p>
+        Vote 1–10 on your phone ·{' '}
+        <strong>
+          {voted.size} of {players.length} voted
+        </strong>
+      </p>
+      <ul className="players votes" aria-label="Who has voted">
+        {players.map((player) => (
+          <li key={player.id} className={voted.has(player.id) ? 'voted' : undefined}>
+            {player.name}
+            <span className="sr-only">{voted.has(player.id) ? ', voted' : ', not voted yet'}</span>
+          </li>
+        ))}
+      </ul>
     </main>
   )
 }
