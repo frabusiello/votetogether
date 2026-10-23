@@ -42,6 +42,8 @@ export const games = pgTable('games', {
   }),
   status: gameStatus('status').notNull().default('lobby'),
   currentItemIndex: integer('current_item_index').notNull().default(0),
+  // Set while a lobby counts down to the first question; null otherwise.
+  startsAt: timestamp('starts_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

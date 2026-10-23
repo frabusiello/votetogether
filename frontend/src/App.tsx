@@ -1,6 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import {
-  castVote,
   clearHostedGameCode,
   clearPlayerSeat,
   createGame,
@@ -18,9 +17,8 @@ import {
   saveHostedGameCode,
   savePlayerSeat,
   saveVote,
-  VoteError,
 } from './game'
-import { useGameUpdates } from './socket'
+import { cancelStart, castVote, type Send, SocketError, startGame, useGameSocket } from './socket'
 import './App.css'
 
 // A game saved in a cookie that this browser can reconnect to, either as the TV or as a player.
@@ -78,9 +76,18 @@ function App() {
     if (saved) loadSavedGame(saved)
   }, [])
 
-  // The TV follows its game live, e.g. to show players as they join.
-  useGameUpdates(screen.name === 'game' ? screen.game.code : null, (game) =>
-    setScreen({ name: 'game', game }),
+  // The TV and the phones follow their game live (players joining, the game starting, votes), and
+  // phones send their actions over the same connection.
+  const liveCode = screen.name === 'game' || screen.name === 'player' ? screen.game.code : null
+  const send = useGameSocket(liveCode, (game) =>
+    setScreen((current) => {
+      if (current.name === 'game') return { name: 'game', game }
+      if (current.name === 'player') {
+        const player = game.players.find((p) => p.id === current.player.id)
+        return player ? { name: 'player', game, player } : current
+      }
+      return current
+    }),
   )
 
   switch (screen.name) {
@@ -116,6 +123,7 @@ function App() {
         <PlayerScreen
           game={screen.game}
           player={screen.player}
+          send={send}
           onLeave={() => {
             clearPlayerSeat()
             setScreen({ name: 'home' })
@@ -279,11 +287,11 @@ function JoinScreen({
   )
 }
 
-type PlayerScreenProps = { game: Game; player: Player; onLeave: () => void }
+type PlayerScreenProps = { game: Game; player: Player; send: Send; onLeave: () => void }
 
 // A player's phone screen for a game, which depends on how far along the game is.
 function PlayerScreen(props: PlayerScreenProps) {
-  const { game, player } = props
+  const { game, player, send } = props
   switch (game.status) {
     case 'lobby':
       return <PlayerLobbyScreen {...props} />
@@ -295,6 +303,7 @@ function PlayerScreen(props: PlayerScreenProps) {
           code={game.code}
           player={player}
           question={game.question}
+          send={send}
         />
       ) : (
         <main className="screen">
@@ -318,10 +327,12 @@ function VoteScreen({
   code,
   player,
   question,
+  send,
 }: {
   code: string
   player: Player
   question: Question
+  send: Send
 }) {
   const voteKey = { code, playerId: player.id, questionNumber: question.number }
   // What the server last accepted from this phone, remembered across refreshes on this device.
@@ -336,12 +347,12 @@ function VoteScreen({
     setSending(true)
     setError(null)
     try {
-      const vote = await castVote(code, player.id, value)
+      const vote = await castVote(send, code, player.id, value)
       setVotedScore(vote.score)
       saveVote(voteKey, vote.score)
     } catch (err) {
       setError(
-        err instanceof VoteError
+        err instanceof SocketError
           ? err.message
           : "Couldn't send your vote. Check the connection and try again.",
       )
@@ -413,19 +424,110 @@ function VoteScreen({
   )
 }
 
-function PlayerLobbyScreen({ game, player, onLeave }: PlayerScreenProps) {
+function PlayerLobbyScreen({ game, player, send, onLeave }: PlayerScreenProps) {
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Start and cancel change the game for everyone: the server pushes the result to every screen
+  // (this one included), so there's nothing to do with the reply here.
+  async function handle(action: typeof startGame, failure: string) {
+    setSending(true)
+    setError(null)
+    try {
+      await action(send, game.code, player.id)
+    } catch (err) {
+      setError(err instanceof SocketError ? err.message : failure)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const count = game.players.length
+  if (game.startingInMs !== null) {
+    return (
+      <main className="screen">
+        <Countdown key={game.startingInMs} ms={game.startingInMs} />
+        <p>Someone still joining? Anyone can stop the countdown.</p>
+        <div className="actions">
+          <button
+            type="button"
+            className="secondary"
+            disabled={sending}
+            onClick={() =>
+              handle(cancelStart, "Couldn't cancel. Check the connection and try again.")
+            }
+          >
+            {sending ? 'Cancelling…' : 'Cancel'}
+          </button>
+        </div>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+      </main>
+    )
+  }
+
   return (
     <main className="screen">
       <h1>You're in, {player.name}!</h1>
       <p>
         Game <strong>{game.code}</strong>
-        {game.category && <> · {game.category.name}</>}
+        {game.category && <> · {game.category.name}</>} ·{' '}
+        <strong>
+          {count} {count === 1 ? 'player' : 'players'} in
+        </strong>
       </p>
-      <p>Waiting for the game to start…</p>
+      <ul className="players" aria-label="Players">
+        {game.players.map((p) => (
+          <li key={p.id}>{p.name}</li>
+        ))}
+      </ul>
+      <p>Start the game when everyone's here.</p>
+      <div className="actions">
+        <button
+          type="button"
+          className="primary"
+          disabled={sending}
+          onClick={() =>
+            handle(startGame, "Couldn't start the game. Check the connection and try again.")
+          }
+        >
+          {sending ? 'Starting…' : 'Start game'}
+        </button>
+      </div>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
       <button type="button" className="link" onClick={onLeave}>
         Leave
       </button>
     </main>
+  )
+}
+
+// Counts down to the first question. The server sends the time left rather than a clock time, so
+// the deadline is set from this device's clock when the update arrives; key it by `ms` so each
+// update resyncs it.
+function Countdown({ ms }: { ms: number }) {
+  const [deadline] = useState(() => Date.now() + ms)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 200)
+    return () => clearInterval(timer)
+  }, [])
+
+  const seconds = Math.max(0, Math.ceil((deadline - now) / 1000))
+  return (
+    <div className="countdown" role="timer" aria-live="polite">
+      <p className="countdown-label">{seconds > 0 ? 'Starting in' : 'Here we go!'}</p>
+      <p className="score-card" aria-label={`${seconds} seconds`}>
+        {seconds}
+      </p>
+    </div>
   )
 }
 
@@ -453,6 +555,21 @@ function GameScreen({ game, onStartOver }: { game: Game; onStartOver: () => void
 }
 
 function LobbyScreen({ game, onStartOver }: { game: Game; onStartOver: () => void }) {
+  // Once someone presses Start, joining is closed, so the code gives way to the countdown.
+  if (game.startingInMs !== null) {
+    return (
+      <main className="screen">
+        <Countdown key={game.startingInMs} ms={game.startingInMs} />
+        <ul className="players" aria-label="Players">
+          {game.players.map((player) => (
+            <li key={player.id}>{player.name}</li>
+          ))}
+        </ul>
+        <p className="tagline">Someone missing? Cancel from any phone.</p>
+      </main>
+    )
+  }
+
   return (
     <main className="screen">
       <p className="tagline">

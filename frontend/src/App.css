@@ -64,7 +64,8 @@
 }
 
 .secondary {
-  color: var(--ink);
+  /* Dark text in both modes: cream ink would vanish on mustard in dark mode. */
+  color: #3a2a20;
   background: var(--mustard);
 }
 
@@ -112,6 +113,20 @@
 
   @media (max-width: 1024px) {
     gap: 10px;
+  }
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  .countdown-label {
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--accent);
   }
 }
 

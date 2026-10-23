@@ -7,6 +7,8 @@ export type Game = {
   code: string
   status: 'lobby' | 'playing' | 'results'
   category: { name: string } | null
+  // While the lobby counts down to the first question, how long is left. Null otherwise.
+  startingInMs: number | null
   players: Player[]
   question: Question | null
 }
@@ -95,19 +97,6 @@ export function saveVote(key: VoteKey, score: number) {
   } catch {
     // Storage blocked: the vote still counts, the slider just won't remember it.
   }
-}
-
-// A vote the server refused (voting closed, not in the game, bad score), with its reason.
-export class VoteError extends Error {}
-
-export async function castVote(code: string, playerId: number, score: number) {
-  const res = await postJson(`/api/games/${encodeURIComponent(code)}/votes`, { playerId, score })
-  if ([400, 404, 409].includes(res.status)) {
-    throw new VoteError(await errorMessage(res, "Couldn't record your vote"))
-  }
-  if (!res.ok) throw new Error(`Voting in game ${code} failed with ${res.status}`)
-  const vote: { itemId: number; score: number } = await res.json()
-  return vote
 }
 
 function postJson(url: string, body: unknown) {

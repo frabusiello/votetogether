@@ -22,20 +22,8 @@ export class GamesController {
   @Post(':code/players')
   async join(@Param('code') code: string, @Body('name') name: unknown) {
     const { player, created } = await this.games.join(code, name);
-    // Let the TV show the new player. A rejoin doesn't change the game, so there's nothing to send.
+    // Let the screens show the new player. A rejoin doesn't change the game, so there's nothing to send.
     if (created) this.gateway.broadcastState(await this.games.getState(code));
     return player;
-  }
-
-  @Post(':code/votes')
-  async vote(
-    @Param('code') code: string,
-    @Body('playerId') playerId: unknown,
-    @Body('score') score: unknown,
-  ) {
-    const { vote, created } = await this.games.vote(code, playerId, score);
-    // Let the TV tick off the player. Changing a vote doesn't change who has voted.
-    if (created) this.gateway.broadcastState(await this.games.getState(code));
-    return vote;
   }
 }
