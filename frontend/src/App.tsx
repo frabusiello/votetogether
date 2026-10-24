@@ -6,7 +6,6 @@ import {
   fetchGame,
   fetchServerConfig,
   type Game,
-  type Item,
   GameNotFoundError,
   getHostedGameCode,
   getPlayerSeat,
@@ -34,6 +33,7 @@ import {
   useGameSocket,
 } from './socket'
 import { BackButton } from './components/BackButton'
+import { QuestionImage } from './components/QuestionImage'
 import './App.css'
 
 // A game saved in a cookie that this browser can reconnect to, either as the TV or as a player.
@@ -969,18 +969,6 @@ function PlayerResultsScreen({
         </p>
       )}
     </main>
-  )
-}
-
-// The question's picture, or a placeholder for items that don't have one yet.
-function QuestionImage({ item, className }: { item: Item; className?: string }) {
-  const classes = className ? `question-image ${className}` : 'question-image'
-  return item.imageUrl ? (
-    <img className={classes} src={item.imageUrl} alt={item.name} />
-  ) : (
-    <div className={`${classes} placeholder`} aria-hidden="true">
-      No picture yet
-    </div>
   )
 }
 
