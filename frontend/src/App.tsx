@@ -33,6 +33,7 @@ import {
   startGame,
   useGameSocket,
 } from './socket'
+import { BackButton } from './components/BackButton'
 import './App.css'
 
 // A game saved in a cookie that this browser can reconnect to, either as the TV or as a player.
@@ -374,6 +375,7 @@ function PlayerScreen(props: PlayerScreenProps) {
 }
 
 const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
 const STARTING_SCORE = 5
 
 function VoteScreen({
@@ -979,14 +981,6 @@ function QuestionImage({ item, className }: { item: Item; className?: string }) 
     <div className={`${classes} placeholder`} aria-hidden="true">
       No picture yet
     </div>
-  )
-}
-
-function BackButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button type="button" className="link" onClick={onClick}>
-      ← Back
-    </button>
   )
 }
 
