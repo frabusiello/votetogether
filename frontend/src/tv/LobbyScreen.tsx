@@ -52,9 +52,9 @@ export function LobbyScreen({ game, send, onStartOver }: GameScreenProps) {
           <span key={i}>{letter}</span>
         ))}
       </div>
-      {game.category && (
+      {game.quiz && (
         <p>
-          Tonight: <strong>{game.category.name}</strong>
+          Tonight: <strong>{game.quiz.name}</strong>
         </p>
       )}
       {game.players.length > 0 ? (

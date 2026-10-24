@@ -7,7 +7,7 @@ The app consists of a backend and a pgsql db (vote_together). The frontend has 2
 - individual player screens where they can access and interact with the tv game using a code
 
 The shared gamescreen thus needs to have a code the players can use.
-Then the game starts, an image of the thing to vote on appears on the main screen. ON individual players screens the name of the thing appears as well as a 1-10 scale they can click on. As players vote, the game screen updates in real time of who voted already. When everyone has voted, we move on to the next question. Once the questions are over a screen on the main game shows how everyone voted on each thing, to spark discussion. The players can then choose to play again in a different category, like 'actors' or 'movies' or 'pizza toppings'.
+Then the game starts, an image of the thing to vote on appears on the main screen. ON individual players screens the name of the thing appears as well as a 1-10 scale they can click on. As players vote, the game screen updates in real time of who voted already. When everyone has voted, we move on to the next question. Once the questions are over a screen on the main game shows how everyone voted on each thing, to spark discussion. The players can then choose to play again with a different quiz, like 'actors' or 'movies' or 'pizza toppings'.
 
 - `backend/` — NestJS API (port 3000, routes under `/api`)
 - `frontend/` — React + Vite + TypeScript (port 5173, proxies `/api` to the backend)
@@ -68,7 +68,7 @@ address, so set `PUBLIC_URL` in that case.
 ## How a game works
 
 1. **Create (TV).** _Create game_ makes a game with a 4-letter join code. Every game currently uses the
-   _Foods_ category. The TV shows the code and lists players as they join.
+   _Foods_ quiz. The TV shows the code and lists players as they join.
 2. **Join (phones).** Players enter the code and a name. A game holds up to 20 players.
 3. **Start (any phone).** Any player can press _Start game_ once everyone is in. That starts a
    10-second countdown on every screen and closes the game to new players. Anyone can cancel it,
@@ -92,7 +92,7 @@ address, so set `PUBLIC_URL` in that case.
    with nothing extra stored, which is safe because votes can't change once the results start.
 7. **Back to the lobby.** On the last result each phone shows **Back to the lobby**. The first
    tap starts a **new game** with its own code and lobby, so the next round can be a different
-   kind of game or category once those exist. Everyone from the finished game is already in the
+   kind of game or quiz once those exist. Everyone from the finished game is already in the
    new lobby under the same name. The TV and every phone move over by themselves: the finished
    game keeps a link to the new one (`next_game_id`, sent to screens as `nextCode`), so a phone
    that was offline follows when it reconnects.

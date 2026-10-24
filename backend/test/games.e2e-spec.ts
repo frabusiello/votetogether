@@ -22,7 +22,7 @@ describe('GamesController (e2e)', () => {
     db = app.get(DB);
   });
 
-  it('/games (POST) creates lobby games in the default category with distinct join codes', async () => {
+  it('/games (POST) creates lobby games in the default quiz with distinct join codes', async () => {
     const first = await request(app.getHttpServer()).post('/games').expect(201);
     const second = await request(app.getHttpServer()).post('/games').expect(201);
     createdIds.push(first.body.id, second.body.id);
@@ -30,9 +30,9 @@ describe('GamesController (e2e)', () => {
     for (const { body } of [first, second]) {
       expect(body).toEqual({
         id: expect.any(Number),
-        code: expect.stringMatching(/^[A-HJ-NP-Z]{4}$/),
+        code: expect.stringMatching(/^[A-Z]{4}$/),
         status: 'lobby',
-        category: { name: 'Foods' },
+        quiz: { name: 'Foods' },
         players: [],
         nextCode: null,
         question: {

@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
-import { categories, items } from './schema.js';
+import { items, quizzes } from './schema.js';
 
 const seed: Record<string, { name: string; items: string[] }> = {
   'pizza-toppings': {
@@ -28,20 +28,20 @@ const pool = new pg.Pool({ connectionString: url });
 const db = drizzle(pool);
 
 try {
-  for (const [slug, category] of Object.entries(seed)) {
+  for (const [slug, quiz] of Object.entries(seed)) {
     const [inserted] = await db
-      .insert(categories)
-      .values({ slug, name: category.name })
-      .onConflictDoNothing({ target: categories.slug })
-      .returning({ id: categories.id });
+      .insert(quizzes)
+      .values({ slug, name: quiz.name })
+      .onConflictDoNothing({ target: quizzes.slug })
+      .returning({ id: quizzes.id });
 
-    // Category already existed: leave its items alone so re-running is safe.
+    // Quiz already existed: leave its items alone so re-running is safe.
     if (!inserted) continue;
 
     await db
       .insert(items)
-      .values(category.items.map((name) => ({ categoryId: inserted.id, name })));
-    console.log(`Seeded ${category.name} (${category.items.length} items)`);
+      .values(quiz.items.map((name) => ({ quizId: inserted.id, name })));
+    console.log(`Seeded ${quiz.name} (${quiz.items.length} items)`);
   }
 } finally {
   await pool.end();

@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 import { and, asc, count, eq, isNull, sql } from 'drizzle-orm';
 import { DB, type Db } from '../db/db.module.js';
-import { categories, gameItems, games, items, players, votes } from '../db/schema.js';
+import { gameItems, games, items, players, quizzes, votes } from '../db/schema.js';
 
 export const CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 export const CODE_LENGTH = 4;
 const MAX_ATTEMPTS = 5;
 
-// Every game uses this category until players can pick one.
-const DEFAULT_CATEGORY_SLUG = 'foods';
+// Every game uses this quiz until players can pick one.
+const DEFAULT_QUIZ_SLUG = 'foods';
 
 export const MAX_NAME_LENGTH = 20;
 export const MAX_PLAYERS = 20;
@@ -40,19 +40,19 @@ export class GamesService {
   constructor(@Inject(DB) private readonly db: Db) {}
 
   async create() {
-    const [category] = await this.db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(eq(categories.slug, DEFAULT_CATEGORY_SLUG));
-    const questions = category
+    const [quiz] = await this.db
+      .select({ id: quizzes.id })
+      .from(quizzes)
+      .where(eq(quizzes.slug, DEFAULT_QUIZ_SLUG));
+    const questions = quiz
       ? await this.db
           .select({ id: items.id })
           .from(items)
-          .where(eq(items.categoryId, category.id))
+          .where(eq(items.quizId, quiz.id))
           .orderBy(asc(items.id))
       : [];
-    if (!category || questions.length === 0) {
-      throw new InternalServerErrorException('Default category missing, run npm run db:seed');
+    if (!quiz || questions.length === 0) {
+      throw new InternalServerErrorException('Default quiz missing, run npm run db:seed');
     }
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -60,7 +60,7 @@ export class GamesService {
         // The unique index on code is what guarantees uniqueness; a clash just means try another code.
         const [game] = await tx
           .insert(games)
-          .values({ code: generateCode(), categoryId: category.id })
+          .values({ code: generateCode(), quizId: quiz.id })
           .onConflictDoNothing({ target: games.code })
           .returning({ id: games.id, code: games.code });
         if (!game) return null;
@@ -128,7 +128,7 @@ export class GamesService {
         id: games.id,
         code: games.code,
         status: games.status,
-        categoryId: games.categoryId,
+        quizId: games.quizId,
         currentItemIndex: games.currentItemIndex,
         nextGameId: games.nextGameId,
       })
@@ -136,13 +136,13 @@ export class GamesService {
       .where(eq(games.code, code.toUpperCase()));
     if (!game) throw new NotFoundException(`No game with code ${code}`);
 
-    const [[category], gamePlayers, [currentItem], [{ total }]] = await Promise.all([
-      game.categoryId === null
+    const [[quiz], gamePlayers, [currentItem], [{ total }]] = await Promise.all([
+      game.quizId === null
         ? Promise.resolve([])
         : this.db
-            .select({ name: categories.name })
-            .from(categories)
-            .where(eq(categories.id, game.categoryId)),
+            .select({ name: quizzes.name })
+            .from(quizzes)
+            .where(eq(quizzes.id, game.quizId)),
       this.db
         .select({ id: players.id, name: players.name })
         .from(players)
@@ -185,7 +185,7 @@ export class GamesService {
       id: game.id,
       code: game.code,
       status: game.status,
-      category: category ?? null,
+      quiz: quiz ?? null,
       players: gamePlayers,
       // The game the players went on to after this one, once someone taps Back to the lobby.
       nextCode: nextGame?.code ?? null,

@@ -29,6 +29,13 @@
       "when": 1792829210123,
       "tag": "0003_game_next_game",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792865919578,
+      "tag": "0004_rename_categories_to_quizzes",
+      "breakpoints": true
     }
   ]
 }

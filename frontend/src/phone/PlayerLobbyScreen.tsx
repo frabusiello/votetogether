@@ -53,7 +53,7 @@ export function PlayerLobbyScreen({ game, player, send, onLeave }: PlayerScreenP
       <h1>You're in, {player.name}!</h1>
       <p>
         Game <strong>{game.code}</strong>
-        {game.category && <> · {game.category.name}</>} ·{' '}
+        {game.quiz && <> · {game.quiz.name}</>} ·{' '}
         <strong>
           {count} {count === 1 ? 'player' : 'players'} in
         </strong>

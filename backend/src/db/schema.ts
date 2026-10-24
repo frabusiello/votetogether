@@ -14,7 +14,7 @@ import {
   unique,
 } from 'drizzle-orm/pg-core';
 
-export const categories = pgTable('categories', {
+export const quizzes = pgTable('quizzes', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
@@ -24,13 +24,13 @@ export const items = pgTable(
   'items',
   {
     id: serial('id').primaryKey(),
-    categoryId: integer('category_id')
+    quizId: integer('quiz_id')
       .notNull()
-      .references(() => categories.id, { onDelete: 'cascade' }),
+      .references(() => quizzes.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     imageUrl: text('image_url'),
   },
-  (t) => [index('items_category_id_idx').on(t.categoryId)],
+  (t) => [index('items_quiz_id_idx').on(t.quizId)],
 );
 
 export const gameStatus = pgEnum('game_status', ['lobby', 'playing', 'results']);
@@ -38,7 +38,7 @@ export const gameStatus = pgEnum('game_status', ['lobby', 'playing', 'results'])
 export const games = pgTable('games', {
   id: serial('id').primaryKey(),
   code: text('code').notNull().unique(),
-  categoryId: integer('category_id').references(() => categories.id, {
+  quizId: integer('quiz_id').references(() => quizzes.id, {
     onDelete: 'set null',
   }),
   status: gameStatus('status').notNull().default('lobby'),
@@ -105,7 +105,7 @@ export const votes = pgTable(
   ],
 );
 
-export type Category = typeof categories.$inferSelect;
+export type Quiz = typeof quizzes.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type Game = typeof games.$inferSelect;
 export type Player = typeof players.$inferSelect;
