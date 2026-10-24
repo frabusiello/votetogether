@@ -1,5 +1,5 @@
 # Runs Votetogether with its own Postgres: `docker compose up -d --build`, then open
-# http://<this machine's address>:8080 on the TV. Settings come from the environment or a .env file
+# http://<this machine's address>:5174 on the TV. Settings come from the environment or a .env file
 # next to this one; see "Running with Docker" in the README.
 services:
   db:
@@ -24,11 +24,11 @@ services:
         condition: service_healthy
     environment:
       VOTE_TOGETHER_PG_URL: postgres://votetogether:${POSTGRES_PASSWORD:-votetogether}@db:5432/vote_together
-      # The address the TV tells players to join at, e.g. http://192.168.1.20:8080 or a domain.
+      # The address the TV tells players to join at, e.g. http://192.168.1.20:5174 or a domain.
       # Leave it empty to show whatever address the TV was opened with.
       PUBLIC_URL: ${PUBLIC_URL:-}
     ports:
-      - '${PORT:-8080}:3000'
+      - '${PORT:-5174}:3000'
     restart: unless-stopped
 
 volumes:

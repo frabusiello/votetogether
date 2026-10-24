@@ -43,8 +43,8 @@ the question set included, for example on a home server or a NAS:
 docker compose up -d --build
 ```
 
-Then open `http://<the server's address>:8080` on the TV, e.g. `http://192.168.1.20:8080` or
-`http://nas.local:8080`, and press _Create game_.
+Then open `http://<the server's address>:5174` on the TV, e.g. `http://192.168.1.20:5174` or
+`http://nas.local:5174`, and press _Create game_.
 
 - **One port.** The app container serves both the API and the built frontend.
 - **Database.** Postgres runs in its own container and keeps its data in the `db-data` volume.
@@ -55,8 +55,8 @@ Settings, read from the environment or from a `.env` file next to `docker-compos
 
 | Variable | Default | What it's for |
 | --- | --- | --- |
-| `PORT` | `8080` | The port the game is served on. |
-| `PUBLIC_URL` | _(empty)_ | The address the TV tells players to join at, e.g. `http://192.168.1.20:8080` or `https://games.example.com`. |
+| `PORT` | `5174` | The port the game is served on. The default is one above the frontend's dev port (5173), to stay clear of the usual 80, 3000 and 8080. |
+| `PUBLIC_URL` | _(empty)_ | The address the TV tells players to join at, e.g. `http://192.168.1.20:5174` or `https://games.example.com`. |
 | `POSTGRES_PASSWORD` | `votetogether` | The database password. Change it if the server is reachable from outside your home network. |
 
 **The address on the TV.** When `PUBLIC_URL` is set, the TV always shows it. Otherwise the TV

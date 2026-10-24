@@ -628,7 +628,7 @@ function GameScreen({ game, send, onStartOver }: GameScreenProps) {
 
 // Where players should go to join, as shown on the TV:
 // 1. PUBLIC_URL, when the server has one set (a domain, or a NAS's fixed name or IP).
-// 2. Otherwise the address the TV was opened with, e.g. http://192.168.1.20:8080 on a home server.
+// 2. Otherwise the address the TV was opened with, e.g. http://192.168.1.20:5174 on a home server.
 // 3. Except when the TV is on the server itself via localhost, which phones can't reach: then the
 //    server's local network IP, on the same port.
 function useJoinAddress() {
