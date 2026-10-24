@@ -22,6 +22,13 @@
       "when": 1792777439606,
       "tag": "0002_drop_starts_at",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792829210123,
+      "tag": "0003_game_next_game",
+      "breakpoints": true
     }
   ]
 }

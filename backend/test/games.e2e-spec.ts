@@ -34,6 +34,7 @@ describe('GamesController (e2e)', () => {
         status: 'lobby',
         category: { name: 'Foods' },
         players: [],
+        nextCode: null,
         question: {
           number: 1,
           total: expect.any(Number),

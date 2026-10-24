@@ -91,6 +91,12 @@ address, so set `PUBLIC_URL` in that case.
    deviation): everyone giving 5 has no spread, a 1 and a 10 has a lot. Ties keep question order,
    and questions nobody voted on come first, since there's nothing to argue about. The order is worked out from the votes each time,
    with nothing extra stored, which is safe because votes can't change once the results start.
+7. **Back to the lobby.** On the last result each phone shows **Back to the lobby**. The first
+   tap starts a **new game** with its own code and lobby, so the next round can be a different
+   kind of game or category once those exist. Everyone from the finished game is already in the
+   new lobby under the same name. The TV and every phone move over by themselves: the finished
+   game keeps a link to the new one (`next_game_id`, sent to screens as `nextCode`), so a phone
+   that was offline follows when it reconnects.
 
 The TV and the phones each remember their game in a cookie (`vt_hosted_game` for the TV,
 `vt_player` for a phone), so a refresh or a dropped connection drops them back into the game.
@@ -124,6 +130,7 @@ id first. Everything after that goes over the socket:
 | `vote` `{ code, playerId, score }` | a phone | Record or change a 1–10 vote on the current question. |
 | `next` `{ code, questionNumber }` | the TV, when its countdown hits 0 | Move to the next question, or to the results after the last. A repeated or late `next` does nothing. |
 | `next-result` `{ code, playerId, questionNumber }` | a phone, on the results | Mark this player ready to move on (it can't be undone). Once every connected player is ready, move to the next question's results. |
+| `back-to-lobby` `{ code, playerId }` | a phone, on the last result | Start a new game for the same players and send its code to every screen as `nextCode`. A repeat gets the same new game. |
 
 After any change (a player joining, a countdown starting or being cancelled, a first vote on a
 question, the game moving on, a player tapping Next on the results, a phone connecting or

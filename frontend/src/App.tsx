@@ -22,6 +22,7 @@ import {
   type ServerConfig,
 } from './game'
 import {
+  backToLobby,
   beginGame,
   cancelStart,
   castVote,
@@ -73,15 +74,42 @@ function App() {
 
     fetchGame(savedCode(saved))
       .then((game) => {
-        if (saved.as === 'host') return setScreen({ name: 'game', game })
+        if (saved.as === 'host') {
+          return game.nextCode ? goToNextGame(game, null) : setScreen({ name: 'game', game })
+        }
         const player = game.players.find((p) => p.id === saved.seat.playerId)
-        if (player) setScreen({ name: 'player', game, player })
-        else forget()
+        if (!player) forget()
+        else if (game.nextCode) goToNextGame(game, player)
+        else setScreen({ name: 'player', game, player })
       })
       .catch((err: unknown) => {
         if (err instanceof GameNotFoundError) forget()
         else setScreen({ name: 'offline', saved })
       })
+  }
+
+  // Someone tapped Back to the lobby: the game now points at a new one for the same players, so
+  // follow them there. The TV switches its saved game; a phone rejoins by name, which finds the
+  // seat the server already made for it.
+  function goToNextGame(game: Game, player: Player | null) {
+    const nextCode = game.nextCode
+    if (!nextCode) return
+    if (!player) {
+      saveHostedGameCode(nextCode)
+      const saved: SavedGame = { as: 'host', code: nextCode }
+      setScreen({ name: 'restoring', saved })
+      return loadSavedGame(saved)
+    }
+    const current: SavedGame = { as: 'player', seat: { code: game.code, playerId: player.id } }
+    setScreen({ name: 'restoring', saved: current })
+    joinGame(nextCode, player.name)
+      .then((joined) => {
+        const seat = { code: nextCode, playerId: joined.id }
+        savePlayerSeat(seat)
+        loadSavedGame({ as: 'player', seat })
+      })
+      // Retrying reloads this game, which leads here again.
+      .catch(() => setScreen({ name: 'offline', saved: current }))
   }
 
   useEffect(() => {
@@ -93,7 +121,8 @@ function App() {
   // phones send their actions over the same connection.
   const liveCode = screen.name === 'game' || screen.name === 'player' ? screen.game.code : null
   const livePlayerId = screen.name === 'player' ? screen.player.id : null
-  const send = useGameSocket(liveCode, livePlayerId, (game) =>
+  const send = useGameSocket(liveCode, livePlayerId, (game) => {
+    if (game.nextCode) return goToNextGame(game, screen.name === 'player' ? screen.player : null)
     setScreen((current) => {
       if (current.name === 'game') return { name: 'game', game }
       if (current.name === 'player') {
@@ -101,8 +130,8 @@ function App() {
         return player ? { name: 'player', game, player } : current
       }
       return current
-    }),
-  )
+    })
+  })
 
   switch (screen.name) {
     case 'restoring':
@@ -818,7 +847,10 @@ function ResultsScreen({ game, question }: { game: Game; question: Question }) {
         </div>
       </figure>
       {isLast ? (
-        <p className="tagline">That's all the results!</p>
+        <>
+          <p className="tagline">That's all the results!</p>
+          <p>Tap Back to the lobby on your phone to start a new game.</p>
+        </>
       ) : (
         <>
           <ul className="players votes" aria-label="Ready for the next one">
@@ -845,7 +877,8 @@ function ResultsScreen({ game, question }: { game: Game; question: Question }) {
 }
 
 // A player's phone on the results: their own score for the question being shown, and Next.
-// Tapping Next can't be undone; once every connected player has, everyone moves on.
+// Tapping Next can't be undone; once every connected player has, everyone moves on. On the last
+// question, Back to the lobby moves everyone on to a new game.
 function PlayerResultsScreen({
   game,
   question,
@@ -865,11 +898,11 @@ function PlayerResultsScreen({
   const readyCount = connected.filter((id) => game.readyPlayerIds?.includes(id)).length
   const isLast = question.number >= question.total
 
-  async function handleNext() {
+  async function handleSend(action: () => Promise<void>) {
     setSending(true)
     setError(null)
     try {
-      await readyForNextResult(send, game.code, player.id, question.number)
+      await action()
     } catch (err) {
       setError(
         err instanceof SocketError ? err.message : "Couldn't send that. Check the connection.",
@@ -894,7 +927,19 @@ function PlayerResultsScreen({
         </>
       )}
       {isLast ? (
-        <p>That's all the results! Check the TV.</p>
+        <>
+          <div className="actions">
+            <button
+              type="button"
+              className="primary"
+              disabled={sending}
+              onClick={() => handleSend(() => backToLobby(send, game.code, player.id))}
+            >
+              {sending ? 'Sending…' : 'Back to the lobby'}
+            </button>
+          </div>
+          <p>That's all the results! Head back to the lobby to start a new game.</p>
+        </>
       ) : (
         <>
           <div className="actions">
@@ -902,7 +947,9 @@ function PlayerResultsScreen({
               type="button"
               className={isReady ? 'primary done' : 'primary'}
               disabled={sending || isReady}
-              onClick={handleNext}
+              onClick={() =>
+                handleSend(() => readyForNextResult(send, game.code, player.id, question.number))
+              }
             >
               {isReady ? 'Ready ✓' : sending ? 'Sending…' : 'Next'}
             </button>

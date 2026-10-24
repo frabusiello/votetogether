@@ -9,10 +9,12 @@ import { DB, type Db } from './../src/db/db.module.js';
 import { games, votes } from './../src/db/schema.js';
 
 type GameState = {
+  id: number;
   code: string;
   status: string;
   startingInMs: number | null;
   players: { id: number; name: string }[];
+  nextCode: string | null;
   question: {
     number: number;
     total: number;
@@ -229,6 +231,8 @@ describe('GamesGateway (e2e)', () => {
     let benId: number;
     let total: number;
     const phones: Socket[] = [];
+    // New games started from the results, deleted after each test.
+    const nextCodes: string[] = [];
 
     // A player's phone: its own socket, watching the game as that player.
     const connectPhone = async (playerId: number) => {
@@ -267,6 +271,9 @@ describe('GamesGateway (e2e)', () => {
 
     afterEach(async () => {
       for (const phone of phones.splice(0)) phone.disconnect();
+      for (const nextCode of nextCodes.splice(0)) {
+        await db.delete(games).where(eq(games.code, nextCode));
+      }
       // Let the server finish handling the disconnects before the game and the app go away.
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
@@ -326,6 +333,39 @@ describe('GamesGateway (e2e)', () => {
         scores(7, 9),
         scores(1, 10),
       ]);
+    });
+
+    it('starts a new game for the same players from the last result', async () => {
+      const ana = await connectPhone(anaId);
+      const backToLobby = () =>
+        ana.emitWithAck('back-to-lobby', { code, playerId: anaId }) as Promise<Ack>;
+      expect(await backToLobby()).toEqual({ game: null }); // Still playing.
+
+      await send('next', { questionNumber: total });
+      expect(await backToLobby()).toEqual({ game: null }); // Not at the end of the results yet.
+      expect(await send('back-to-lobby', { playerId: 9999 })).toEqual({ error: "You're not in this game" });
+
+      await db.update(games).set({ currentItemIndex: total - 1 }).where(eq(games.code, code));
+      const toTv = updateWhere((game) => game.nextCode !== null);
+      const old = await backToLobby();
+      const nextCode = old.game!.nextCode!;
+      nextCodes.push(nextCode);
+      expect(nextCode).toMatch(/^[A-Z]{4}$/);
+      expect(nextCode).not.toBe(code);
+      // The old game stays on its last result, telling every screen where everyone went.
+      expect(old.game).toMatchObject({ status: 'results', question: { number: total } });
+      expect((await toTv).nextCode).toBe(nextCode);
+      expect((await backToLobby()).game?.nextCode).toBe(nextCode); // A repeat finds the same game.
+
+      // The new game is a fresh lobby with everyone in it, and the phones rejoin by name.
+      const next = await request(app.getHttpServer()).get(`/games/${nextCode}`).expect(200);
+      expect(next.body).toMatchObject({ status: 'lobby', nextCode: null });
+      expect(next.body.players.map((p: { name: string }) => p.name)).toEqual(['Ana', 'Ben']);
+      const rejoined = await request(app.getHttpServer())
+        .post(`/games/${nextCode}/players`)
+        .send({ name: 'Ana' })
+        .expect(201);
+      expect(rejoined.body.id).toBe(next.body.players[0].id);
     });
 
     it("doesn't wait for players who dropped out", async () => {

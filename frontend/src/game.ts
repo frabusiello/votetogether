@@ -14,6 +14,8 @@ export type Game = {
   connectedPlayerIds?: number[]
   readyPlayerIds?: number[]
   players: Player[]
+  // Set once someone taps Back to the lobby after the results: the new game everyone moved on to.
+  nextCode?: string | null
   question: Question | null
 }
 

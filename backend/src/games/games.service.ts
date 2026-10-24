@@ -8,7 +8,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { and, asc, count, eq, sql } from 'drizzle-orm';
+import { and, asc, count, eq, isNull, sql } from 'drizzle-orm';
 import { DB, type Db } from '../db/db.module.js';
 import { categories, gameItems, games, items, players, votes } from '../db/schema.js';
 
@@ -131,6 +131,7 @@ export class GamesService {
         status: games.status,
         categoryId: games.categoryId,
         currentItemIndex: games.currentItemIndex,
+        nextGameId: games.nextGameId,
       })
       .from(games)
       .where(eq(games.code, code.toUpperCase()));
@@ -165,6 +166,13 @@ export class GamesService {
         ),
       this.db.select({ total: count() }).from(gameItems).where(eq(gameItems.gameId, game.id)),
     ]);
+    const [nextGame] =
+      game.nextGameId === null
+        ? []
+        : await this.db
+            .select({ code: games.code })
+            .from(games)
+            .where(eq(games.id, game.nextGameId));
 
     const questionVotes = currentItem
       ? await this.db
@@ -180,6 +188,8 @@ export class GamesService {
       status: game.status,
       category: category ?? null,
       players: gamePlayers,
+      // The game the players went on to after this one, once someone taps Back to the lobby.
+      nextCode: nextGame?.code ?? null,
       // While playing, the question being voted on; in the results, the question whose votes are
       // showing, and `number` is its place in the results order (see resultPosition).
       question: currentItem
@@ -293,6 +303,54 @@ export class GamesService {
       )
       .returning({ id: games.id });
     return moved.length > 0 ? this.getState(code) : null;
+  }
+
+  // At the end of the results, starts a new game for the same players (Back to the lobby): a new
+  // code and its own lobby, so the next round can be a different game. This one stays as it was,
+  // pointing at the new one so every screen can follow. Returns this game's state, with nextCode
+  // set, or null if the results aren't over yet.
+  async startNextGame(code: string) {
+    const [game] = await this.db
+      .select({
+        id: games.id,
+        status: games.status,
+        currentItemIndex: games.currentItemIndex,
+        nextGameId: games.nextGameId,
+      })
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
+    // Someone else already started it: everyone goes to the same new game.
+    if (game.nextGameId !== null) return this.getState(code);
+
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(gameItems)
+      .where(eq(gameItems.gameId, game.id));
+    if (game.status !== 'results' || game.currentItemIndex !== total - 1) return null;
+
+    const next = await this.create();
+    const linked = await this.db.transaction(async (tx) => {
+      const [link] = await tx
+        .update(games)
+        .set({ nextGameId: next.id })
+        .where(and(eq(games.id, game.id), isNull(games.nextGameId)))
+        .returning({ id: games.id });
+      if (!link) return false;
+      // Everyone's already in the new lobby, under the same names, so their phones can rejoin.
+      const names = await tx
+        .select({ name: players.name })
+        .from(players)
+        .where(eq(players.gameId, game.id))
+        .orderBy(asc(players.joinedAt), asc(players.id));
+      if (names.length > 0) {
+        await tx.insert(players).values(names.map(({ name }) => ({ gameId: next.id, name })));
+      }
+      return true;
+    });
+    // Two taps at once: the other one's game won, so drop this one.
+    if (!linked) await this.db.delete(games).where(eq(games.id, next.id));
+    return this.getState(code);
   }
 
   // Throws unless `playerId` is a player in the game.

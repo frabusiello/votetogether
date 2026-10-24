@@ -90,6 +90,11 @@ export async function readyForNextResult(
   await send('next-result', { code, playerId, questionNumber })
 }
 
+// On the last result, takes everyone back to the game's lobby to play again.
+export async function backToLobby(send: Send, code: string, playerId: number) {
+  await send('back-to-lobby', { code, playerId })
+}
+
 export async function castVote(send: Send, code: string, playerId: number, score: number) {
   const { vote } = await send<{ vote: { itemId: number; score: number } }>('vote', {
     code,

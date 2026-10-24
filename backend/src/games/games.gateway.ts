@@ -30,7 +30,8 @@ const room = (code: string) => `game:${code.toUpperCase()}`;
 
 // The live channel for a game's screens: the TV and the phones watch it for updates and send their
 // actions over it (starting and cancelling the start, beginning the game, voting, moving to the
-// next question, moving through the results). Lives under /api like the rest of the API.
+// next question, moving through the results, going back to the lobby). Lives under /api like the
+// rest of the API.
 //
 // Countdowns run on the screens, which send `begin` or `next` when theirs reaches zero. The server
 // only remembers, in memory and never in the database: which lobbies are counting down to the
@@ -188,6 +189,22 @@ export class GamesGateway implements OnGatewayDisconnect, OnModuleDestroy {
       }
       entry.playerIds.add(playerId);
       return { game: await this.moveOnIfAllReady(code) };
+    });
+  }
+
+  // A player tapped Back to the lobby on the last result: starts a new game for the same players
+  // and tells every screen its code, so they all move over. A repeat gets the same new game.
+  @SubscribeMessage('back-to-lobby')
+  backToLobby(@MessageBody() body: { code?: unknown; playerId?: unknown }) {
+    return reply(async () => {
+      const code = requireCode(body).toUpperCase();
+      await this.games.findGameForPlayer(code, body.playerId);
+      const state = await this.games.startNextGame(code);
+      if (state) {
+        this.ready.delete(code);
+        this.broadcastState(state);
+      }
+      return { game: state && this.withLive(state) };
     });
   }
 

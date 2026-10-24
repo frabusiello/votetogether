@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   check,
   index,
   integer,
@@ -42,6 +43,11 @@ export const games = pgTable('games', {
   }),
   status: gameStatus('status').notNull().default('lobby'),
   currentItemIndex: integer('current_item_index').notNull().default(0),
+  // Once the results are over, the new game the players went on to (Back to the lobby), so screens
+  // still on this one can follow them there.
+  nextGameId: integer('next_game_id').references((): AnyPgColumn => games.id, {
+    onDelete: 'set null',
+  }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
