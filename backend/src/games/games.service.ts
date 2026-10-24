@@ -207,8 +207,9 @@ export class GamesService {
 
   // The results go from the question people agreed on most to the one they disagreed on most:
   // ordered by the spread of the scores (their standard deviation), ties in question order, and
-  // questions nobody voted on first, as there's nothing to argue about. Returns a subquery for the position of the question shown
-  // `rank`th (0-based). Votes can't change once the results start, so the order stays put.
+  // questions nobody voted on first, as there's nothing to argue about. Returns a subquery for the
+  // position of the question shown `rank`th (0-based). Votes can't change once the results start,
+  // so the order stays put.
   private resultPosition(gameId: number, rank: number) {
     const spread = sql`stddev_pop(${votes.score})`;
     return this.db
@@ -257,7 +258,7 @@ export class GamesService {
       .from(gameItems)
       .where(eq(gameItems.gameId, game.id));
 
-    // After the last question the results start again from question 1.
+    // After the last question the results start from the top of their order (see resultPosition).
     const next: Partial<typeof games.$inferInsert> =
       fromNumber < total
         ? { currentItemIndex: fromNumber }

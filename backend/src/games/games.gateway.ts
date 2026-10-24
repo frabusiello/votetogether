@@ -33,9 +33,10 @@ const room = (code: string) => `game:${code.toUpperCase()}`;
 // next question, moving through the results, going back to the lobby). Lives under /api like the
 // rest of the API.
 //
-// Countdowns run on the screens, which send `begin` or `next` when theirs reaches zero. The server
-// only remembers, in memory and never in the database: which lobbies are counting down to the
-// start, which players are connected, and who has tapped Next on the results.
+// Countdowns run on the screens, which send `begin` or `next` when theirs reaches zero; the server
+// runs no timers. It only keeps a little live state in memory: which lobbies are counting down to
+// the start (so joining stays closed), which players are connected, and who has tapped Next on the
+// results.
 @WebSocketGateway({
   path: '/api/socket.io',
   cors: { origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173' },

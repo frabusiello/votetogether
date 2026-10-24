@@ -90,7 +90,7 @@ export async function readyForNextResult(
   await send('next-result', { code, playerId, questionNumber })
 }
 
-// On the last result, takes everyone back to the game's lobby to play again.
+// On the last result, starts a new game for the same players; every screen follows its nextCode.
 export async function backToLobby(send: Send, code: string, playerId: number) {
   await send('back-to-lobby', { code, playerId })
 }

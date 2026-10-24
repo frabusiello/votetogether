@@ -74,7 +74,8 @@ export function clearPlayerSeat() {
 
 export class GameNotFoundError extends Error {}
 
-// A join the server refused (bad name, unknown code, name taken, game started), with its reason.
+// A join the server refused (bad name, unknown code, game full, starting or started), with its
+// reason.
 export class JoinError extends Error {}
 
 export async function joinGame(code: string, name: string): Promise<Player> {

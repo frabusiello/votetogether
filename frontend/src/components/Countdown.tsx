@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { beginGame, type Send } from '../socket'
 
-// Counts down to the first question. The server sends the time left rather than a clock time, so
-// the deadline is set from this device's clock when the update arrives; key it by `ms` so each
-// update resyncs it.
-// Countdowns run here on the screens, not on the server: when one reaches zero, `onDone` tells
-// the server to move the game on.
+// Counts down `ms` from when it mounts, e.g. to the first question or to the next one. Countdowns
+// run here on the screens, not on the server: when one reaches zero, `onDone` tells the server to
+// move the game on.
 export function Countdown({
   ms,
   label,
@@ -45,7 +43,8 @@ export function Countdown({
 }
 
 // The countdown after someone presses Start. Every screen sends `begin` when it reaches zero; the
-// server only acts on the first. Keyed by `ms` so each update from the server resyncs it.
+// server only acts on the first. The server sends the time left rather than a clock time, so the
+// deadline comes from this device's clock; keyed by `ms` so each update from the server resyncs it.
 export function StartCountdown({ ms, code, send }: { ms: number; code: string; send: Send }) {
   return (
     <Countdown
