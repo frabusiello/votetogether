@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchServerConfig, type ServerConfig } from '../game'
 import { StartCountdown } from '../components/Countdown'
-import { type GameScreenProps } from '../App'
+import { type GameScreenProps } from './GameScreen'
 
 // Where players should go to join, as shown on the TV:
 // 1. PUBLIC_URL, when the server has one set (a domain, or a NAS's fixed name or IP).

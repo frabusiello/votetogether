@@ -15,12 +15,10 @@ import {
   saveHostedGameCode,
   savePlayerSeat,
 } from './game'
-import { type Send, useGameSocket } from './socket'
+import { useGameSocket } from './socket'
 import { BackButton } from './components/BackButton'
 import { PlayerScreen } from './phone/PlayerScreen'
-import { LobbyScreen } from './tv/LobbyScreen'
-import { QuestionScreen } from './tv/QuestionScreen'
-import { ResultsScreen } from './tv/ResultsScreen'
+import { GameScreen } from './tv/GameScreen'
 import './App.css'
 
 // A game saved in a cookie that this browser can reconnect to, either as the TV or as a player.
@@ -317,37 +315,6 @@ function JoinScreen({
       <BackButton onClick={onBack} />
     </main>
   )
-}
-
-// The shared TV screen for a game, which depends on how far along the game is.
-export type GameScreenProps = { game: Game; send: Send; onStartOver: () => void }
-
-function GameScreen({ game, send, onStartOver }: GameScreenProps) {
-  switch (game.status) {
-    case 'lobby':
-      return <LobbyScreen game={game} send={send} onStartOver={onStartOver} />
-    case 'playing':
-      return game.question ? (
-        <QuestionScreen
-          code={game.code}
-          question={game.question}
-          players={game.players}
-          send={send}
-        />
-      ) : (
-        <main className="screen">
-          <p>This game has no questions.</p>
-        </main>
-      )
-    case 'results':
-      return game.question ? (
-        <ResultsScreen game={game} question={game.question} />
-      ) : (
-        <main className="screen">
-          <h1>That's a wrap!</h1>
-        </main>
-      )
-  }
 }
 
 export default App
