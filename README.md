@@ -67,9 +67,8 @@ address, so set `PUBLIC_URL` in that case.
 
 ## How a game works
 
-1. **Create (TV).** _Create game_ makes a game with a 4-letter join code (no I or O, so it can't be
-   misread on a TV). Every game currently uses the _Foods_ category. The TV shows the code and
-   lists players as they join.
+1. **Create (TV).** _Create game_ makes a game with a 4-letter join code. Every game currently uses the
+   _Foods_ category. The TV shows the code and lists players as they join.
 2. **Join (phones).** Players enter the code and a name. A game holds up to 20 players.
 3. **Start (any phone).** Any player can press _Start game_ once everyone is in. That starts a
    10-second countdown on every screen and closes the game to new players. Anyone can cancel it,

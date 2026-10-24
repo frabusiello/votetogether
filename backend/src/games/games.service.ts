@@ -12,8 +12,7 @@ import { and, asc, count, eq, isNull, sql } from 'drizzle-orm';
 import { DB, type Db } from '../db/db.module.js';
 import { categories, gameItems, games, items, players, votes } from '../db/schema.js';
 
-// No I or O, so codes can't be misread as 1 or 0 on the TV.
-export const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+export const CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 export const CODE_LENGTH = 4;
 const MAX_ATTEMPTS = 5;
 
