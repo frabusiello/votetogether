@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { cancelStart, SocketError, startGame } from '../socket'
 import { StartCountdown } from '../components/Countdown'
-import { type PlayerScreenProps } from '../App'
+import { type PlayerScreenProps } from './PlayerScreen'
 
 export function PlayerLobbyScreen({ game, player, send, onLeave }: PlayerScreenProps) {
   const [sending, setSending] = useState(false)
