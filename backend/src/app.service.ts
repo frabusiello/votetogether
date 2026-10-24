@@ -4,10 +4,6 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
-  }
-
   // What the TV needs to tell players where to join:
   // - publicUrl: the PUBLIC_URL setting, when the server has a known address (a domain, or a NAS's
   //   fixed name or IP). Shown as is.
@@ -25,7 +21,8 @@ export class AppService {
 function findLanAddress(): string | null {
   for (const addresses of Object.values(networkInterfaces())) {
     for (const address of addresses ?? []) {
-      if (address.family === 'IPv4' && !address.internal) return address.address;
+      if (address.family === 'IPv4' && !address.internal)
+        return address.address;
     }
   }
   return null;
