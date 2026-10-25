@@ -137,6 +137,13 @@ dropping out), the server pushes the updated game to every screen in the room as
 Scores stay hidden while the game is being played. Only `votedPlayerIds` is sent until the results,
 which include each player's score.
 
+**Every `game` event is the whole game, not a diff.** A screen replaces its copy with each one
+instead of patching it, so it can't drift out of sync, and reconnecting needs nothing special: the
+`watch` reply is just another full game. A game is only a few KB, so sending all of it costs very
+little. Diffs, or Google Docs-style merging, would add ordering, gap detection and a resync path
+for no real gain, because the server decides every change and there are no simultaneous edits to
+merge.
+
 **Countdowns run on the screens, not the server.** Nothing about them is stored in the database and
 the server runs no timers. The screens count down and send `begin` or `next` when they reach 0. The
 server only remembers, in memory, which lobbies are counting down to the start. That's how it keeps
@@ -163,3 +170,10 @@ The end-to-end tests create their own games and delete them afterwards.
 
 - `npm run dev` — start both apps in watch mode
 - `npm run build` — build both apps
+
+## License
+
+Votetogether is licensed under the [GNU Affero General Public License v3.0](LICENSE). You're free
+to use, modify and share it, including commercially. If you share a modified version, or run one
+as a service that other people use over a network, you must make its full source code available
+to them under the same license.
