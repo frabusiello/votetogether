@@ -29,6 +29,9 @@ export const items = pgTable(
       .references(() => quizzes.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     imageUrl: text('image_url'),
+    imageAuthor: text('image_author'),
+    imageLicence: text('image_licence'),
+    imageSourceUrl: text('image_source_url'),
   },
   (t) => [index('items_quiz_id_idx').on(t.quizId)],
 );

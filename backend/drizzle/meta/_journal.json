@@ -36,6 +36,13 @@
       "when": 1792865919578,
       "tag": "0004_rename_categories_to_quizzes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792944041727,
+      "tag": "0005_item_image_credits",
+      "breakpoints": true
     }
   ]
 }
