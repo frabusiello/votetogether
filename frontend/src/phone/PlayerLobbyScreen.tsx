@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { cancelStart, SocketError, startGame } from '../socket'
 import { StartCountdown } from '../components/Countdown'
 import { type PlayerScreenProps } from './PlayerScreen'
+import { QuizSelector } from '../components/QuizSelector'
 
 export function PlayerLobbyScreen({ game, player, send, onLeave }: PlayerScreenProps) {
   const [sending, setSending] = useState(false)
@@ -58,6 +59,8 @@ export function PlayerLobbyScreen({ game, player, send, onLeave }: PlayerScreenP
           {count} {count === 1 ? 'player' : 'players'} in
         </strong>
       </p>
+      <QuizSelector game={game} send={send} />
+
       <ul className="players" aria-label="Players">
         {game.players.map((p) => (
           <li key={p.id}>{p.name}</li>
