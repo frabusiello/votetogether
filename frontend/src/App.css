@@ -521,14 +521,38 @@
   /* The track runs through the score colours, matching the results chart. */
   &::-webkit-slider-runnable-track {
     height: 18px;
-    background: linear-gradient(to right, var(--score-1), var(--score-2), var(--score-3), var(--score-4), var(--score-5), var(--score-6), var(--score-7), var(--score-8), var(--score-9), var(--score-10));
+    background: linear-gradient(
+      to right,
+      var(--score-1),
+      var(--score-2),
+      var(--score-3),
+      var(--score-4),
+      var(--score-5),
+      var(--score-6),
+      var(--score-7),
+      var(--score-8),
+      var(--score-9),
+      var(--score-10)
+    );
     border: var(--outline);
     border-radius: 999px;
     box-shadow: var(--shadow);
   }
   &::-moz-range-track {
     height: 12px;
-    background: linear-gradient(to right, var(--score-1), var(--score-2), var(--score-3), var(--score-4), var(--score-5), var(--score-6), var(--score-7), var(--score-8), var(--score-9), var(--score-10));
+    background: linear-gradient(
+      to right,
+      var(--score-1),
+      var(--score-2),
+      var(--score-3),
+      var(--score-4),
+      var(--score-5),
+      var(--score-6),
+      var(--score-7),
+      var(--score-8),
+      var(--score-9),
+      var(--score-10)
+    );
     border: var(--outline);
     border-radius: 999px;
     box-shadow: var(--shadow);

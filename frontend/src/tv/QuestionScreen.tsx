@@ -1,4 +1,4 @@
-import { type Player, type Question } from '../game'
+import { type Player, type Question } from '../types'
 import { nextQuestion, type Send } from '../socket'
 import { Countdown } from '../components/Countdown'
 import { QuestionImage } from '../components/QuestionImage'

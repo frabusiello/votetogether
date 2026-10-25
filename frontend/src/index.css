@@ -66,16 +66,46 @@
 }
 
 /* Sets --score-color and --score-ink (text on that colour) for one score. */
-.score-1 { --score-color: var(--score-1); --score-ink: #fffaf0; }
-.score-2 { --score-color: var(--score-2); --score-ink: #3a2a20; }
-.score-3 { --score-color: var(--score-3); --score-ink: #3a2a20; }
-.score-4 { --score-color: var(--score-4); --score-ink: #3a2a20; }
-.score-5 { --score-color: var(--score-5); --score-ink: #3a2a20; }
-.score-6 { --score-color: var(--score-6); --score-ink: #3a2a20; }
-.score-7 { --score-color: var(--score-7); --score-ink: #3a2a20; }
-.score-8 { --score-color: var(--score-8); --score-ink: #3a2a20; }
-.score-9 { --score-color: var(--score-9); --score-ink: #3a2a20; }
-.score-10 { --score-color: var(--score-10); --score-ink: #fffaf0; }
+.score-1 {
+  --score-color: var(--score-1);
+  --score-ink: #fffaf0;
+}
+.score-2 {
+  --score-color: var(--score-2);
+  --score-ink: #3a2a20;
+}
+.score-3 {
+  --score-color: var(--score-3);
+  --score-ink: #3a2a20;
+}
+.score-4 {
+  --score-color: var(--score-4);
+  --score-ink: #3a2a20;
+}
+.score-5 {
+  --score-color: var(--score-5);
+  --score-ink: #3a2a20;
+}
+.score-6 {
+  --score-color: var(--score-6);
+  --score-ink: #3a2a20;
+}
+.score-7 {
+  --score-color: var(--score-7);
+  --score-ink: #3a2a20;
+}
+.score-8 {
+  --score-color: var(--score-8);
+  --score-ink: #3a2a20;
+}
+.score-9 {
+  --score-color: var(--score-9);
+  --score-ink: #3a2a20;
+}
+.score-10 {
+  --score-color: var(--score-10);
+  --score-ink: #fffaf0;
+}
 
 #root {
   text-align: center;
@@ -94,7 +124,9 @@ h1,
 h2 {
   font-family: var(--display);
   font-weight: 800;
-  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  font-variation-settings:
+    'SOFT' 100,
+    'WONK' 1;
   color: var(--text-h);
 }
 

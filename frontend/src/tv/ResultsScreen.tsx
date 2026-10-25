@@ -1,5 +1,5 @@
 import { type CSSProperties } from 'react'
-import { type Game, type Question, SCORES } from '../game'
+import { type Game, type Question, SCORES } from '../types'
 import { QuestionImage } from '../components/QuestionImage'
 
 // The TV's results for one question: a bar chart made of people's names, so everyone sees who
@@ -80,10 +80,7 @@ export function ResultsScreen({ game, question }: { game: Game; question: Questi
               const isReady = ready.has(player.id)
               const away = !connected.has(player.id)
               return (
-                <li
-                  key={player.id}
-                  className={isReady ? 'voted' : away ? 'away' : undefined}
-                >
+                <li key={player.id} className={isReady ? 'voted' : away ? 'away' : undefined}>
                   {player.name}
                   {away && !isReady && ' · away'}
                   <span className="sr-only">{isReady ? ', ready' : ', not ready yet'}</span>

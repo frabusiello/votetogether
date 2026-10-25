@@ -3,16 +3,15 @@ import {
   clearHostedGameCode,
   clearPlayerSeat,
   fetchGame,
-  type Game,
   GameNotFoundError,
   getHostedGameCode,
   getPlayerSeat,
   joinGame,
-  type Player,
   type PlayerSeat,
   saveHostedGameCode,
   savePlayerSeat,
 } from './game'
+import { type Game, type Player } from './types'
 import { useGameSocket } from './socket'
 import { HomeScreen } from './home/HomeScreen'
 import { JoinScreen } from './home/JoinScreen'
@@ -85,7 +84,10 @@ function App() {
       setScreen({ name: 'restoring', saved })
       return loadSavedGame(saved)
     }
-    const current: SavedGame = { as: 'player', seat: { code: game.code, playerId: player.id } }
+    const current: SavedGame = {
+      as: 'player',
+      seat: { code: game.code, playerId: player.id },
+    }
     setScreen({ name: 'restoring', saved: current })
     joinGame(nextCode, player.name)
       .then((joined) => {

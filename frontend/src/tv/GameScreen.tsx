@@ -1,4 +1,4 @@
-import { type Game } from '../game'
+import { type Game } from '../types'
 import { type Send } from '../socket'
 import { LobbyScreen } from './LobbyScreen'
 import { QuestionScreen } from './QuestionScreen'

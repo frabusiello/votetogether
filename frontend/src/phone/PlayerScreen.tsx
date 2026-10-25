@@ -1,4 +1,4 @@
-import { type Game, type Player } from '../game'
+import { type Game, type Player } from '../types'
 import { type Send } from '../socket'
 import { PlayerLobbyScreen } from './PlayerLobbyScreen'
 import { PlayerResultsScreen } from './PlayerResultsScreen'

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { getSavedVote, type Player, type Question, saveVote, SCORES } from '../game'
+import { getSavedVote, saveVote } from '../game'
+import { type Player, type Question, SCORES } from '../types'
 import { castVote, type Send, SocketError } from '../socket'
 
 const STARTING_SCORE = 5

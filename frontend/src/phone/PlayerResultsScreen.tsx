@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { type Game, type Player, type Question } from '../game'
+import { type Game, type Player, type Question } from '../types'
 import { backToLobby, readyForNextResult, type Send, SocketError } from '../socket'
 import { QuestionImage } from '../components/QuestionImage'
 

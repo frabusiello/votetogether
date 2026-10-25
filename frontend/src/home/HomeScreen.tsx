@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { createGame, type Game, saveHostedGameCode } from '../game'
+import { createGame, saveHostedGameCode } from '../game'
+import { type Game } from '../types'
 
 export function HomeScreen({
   onCreated,

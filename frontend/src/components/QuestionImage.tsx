@@ -1,4 +1,4 @@
-import { type Item } from '../game'
+import { type Item } from '../types'
 
 // The question's picture, or a placeholder for items that don't have one yet.
 export function QuestionImage({ item, className }: { item: Item; className?: string }) {

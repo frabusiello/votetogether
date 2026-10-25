@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { io, type Socket } from 'socket.io-client'
-import type { Game } from './game'
+import type { Game } from './types'
 
 type Reply<T> = T | { error: string }
 
@@ -44,7 +44,7 @@ export function useGameSocket(
     }
   }, [code, playerId])
 
-  return useCallback(async <T,>(event: string, payload: object): Promise<T> => {
+  return useCallback(async <T>(event: string, payload: object): Promise<T> => {
     const socket = socketRef.current
     if (!socket?.connected) throw new Error("Can't reach the game")
     let reply: Reply<T>
@@ -64,7 +64,10 @@ export async function startGame(send: Send, code: string, playerId: number) {
 }
 
 export async function cancelStart(send: Send, code: string, playerId: number) {
-  const { game } = await send<{ game: Game }>('cancelStart', { code, playerId })
+  const { game } = await send<{ game: Game }>('cancelStart', {
+    code,
+    playerId,
+  })
   return game
 }
 
