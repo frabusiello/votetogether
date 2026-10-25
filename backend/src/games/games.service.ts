@@ -133,7 +133,14 @@ export class GamesService {
         .where(eq(players.gameId, game.id))
         .orderBy(asc(players.joinedAt), asc(players.id)),
       this.db
-        .select({ id: items.id, name: items.name, imageUrl: items.imageUrl })
+        .select({
+          id: items.id,
+          name: items.name,
+          imageUrl: items.imageUrl,
+          imageAuthor: items.imageAuthor,
+          imageSourceUrl: items.imageSourceUrl,
+          imageLicence: items.imageLicence,
+        })
         .from(gameItems)
         .innerJoin(items, eq(items.id, gameItems.itemId))
         .where(

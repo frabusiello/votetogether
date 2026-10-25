@@ -1,6 +1,13 @@
 export type Player = { id: number; name: string }
 
-export type Item = { id: number; name: string; imageUrl: string | null }
+export type Item = {
+  id: number
+  name: string
+  imageUrl: string | null
+  imageAuthor: string | null
+  imageLicence: string | null
+  imageSourceUrl: string | null
+}
 // The 1–10 scale players vote on.
 
 export const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]

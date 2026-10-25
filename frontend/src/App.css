@@ -465,7 +465,20 @@
     box-shadow: none;
   }
 }
+.question-figure {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
 
+.image-credit {
+  max-width: 90vw;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--text);
+  opacity: 0.75;
+}
 .question-name {
   font-size: clamp(48px, 10svh, 96px);
   margin: 0;
