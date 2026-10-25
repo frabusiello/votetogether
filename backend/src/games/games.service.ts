@@ -44,34 +44,18 @@ export class GamesService {
       .select({ id: quizzes.id })
       .from(quizzes)
       .where(eq(quizzes.slug, DEFAULT_QUIZ_SLUG));
-    const questions = quiz
-      ? await this.db
-          .select({ id: items.id })
-          .from(items)
-          .where(eq(items.quizId, quiz.id))
-          .orderBy(asc(items.id))
-      : [];
+    const questions = quiz ? await this.getQuestions(quiz.id) : [];
     if (!quiz || questions.length === 0) {
       throw new InternalServerErrorException('Default quiz missing, run npm run db:seed');
     }
-
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const code = await this.db.transaction(async (tx) => {
-        // The unique index on code is what guarantees uniqueness; a clash just means try another code.
-        const [game] = await tx
-          .insert(games)
-          .values({ code: generateCode(), quizId: quiz.id })
-          .onConflictDoNothing({ target: games.code })
-          .returning({ id: games.id, code: games.code });
-        if (!game) return null;
-
-        await tx
-          .insert(gameItems)
-          .values(questions.map((item, position) => ({ gameId: game.id, itemId: item.id, position })));
-        return game.code;
-      });
-
-      if (code) return this.getState(code);
+      // The unique index on code is what guarantees uniqueness; a clash just means try another code.
+      const [game] = await this.db
+        .insert(games)
+        .values({ code: generateCode(), quizId: quiz.id })
+        .onConflictDoNothing({ target: games.code })
+        .returning({ code: games.code });
+      if (game) return this.getState(game.code);
     }
     throw new ServiceUnavailableException('Could not allocate a game code, try again');
   }
@@ -140,7 +124,7 @@ export class GamesService {
       game.quizId === null
         ? Promise.resolve([])
         : this.db
-            .select({ name: quizzes.name })
+            .select({ id: quizzes.id, name: quizzes.name })
             .from(quizzes)
             .where(eq(quizzes.id, game.quizId)),
       this.db
@@ -222,6 +206,14 @@ export class GamesService {
       .offset(rank);
   }
 
+  private async getQuestions(quizId: number) {
+    return this.db
+      .select({ id: items.id })
+      .from(items)
+      .where(eq(items.quizId, quizId))
+      .orderBy(asc(items.id));
+  }
+
   // Checks that a player can press Start: they're in the game and it's still in the lobby. The
   // countdown itself runs on the screens; begin() moves the game on when it runs out.
   async checkCanStart(code: string, playerId: unknown) {
@@ -233,12 +225,27 @@ export class GamesService {
   // Moves a lobby on to the first question. Returns the new state, or null if the game had already
   // begun, so several screens finishing the countdown at once is fine.
   async begin(code: string) {
-    const begun = await this.db
-      .update(games)
-      .set({ status: 'playing', currentItemIndex: 0 })
-      .where(and(eq(games.code, code.toUpperCase()), eq(games.status, 'lobby')))
-      .returning({ id: games.id });
-    return begun.length > 0 ? this.getState(code) : null;
+    const begun = await this.db.transaction(async (tx) => {
+      const [game] = await tx
+        .update(games)
+        .set({ status: 'playing', currentItemIndex: 0 })
+        .where(and(eq(games.code, code.toUpperCase()), eq(games.status, 'lobby')))
+        .returning({ id: games.id, quizId: games.quizId });
+      if (!game) return false;
+      const questions = game.quizId === null ? [] : await this.getQuestions(game.quizId);
+      if (questions.length === 0) {
+        throw new InternalServerErrorException(`Game ${code} has no questions to play`);
+      }
+      await tx.insert(gameItems).values(
+        questions.map((item, position) => ({
+          gameId: game.id,
+          itemId: item.id,
+          position,
+        })),
+      );
+      return true;
+    });
+    return begun ? this.getState(code) : null;
   }
 
   // Moves on from question `fromNumber` (1-based) to the next one, or to the results after the last.
@@ -376,11 +383,17 @@ export class GamesService {
   async vote(code: string, playerId: unknown, score: unknown) {
     if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required');
     if (!isWholeNumber(score) || score < MIN_SCORE || score > MAX_SCORE) {
-      throw new BadRequestException(`Score must be a whole number from ${MIN_SCORE} to ${MAX_SCORE}`);
+      throw new BadRequestException(
+        `Score must be a whole number from ${MIN_SCORE} to ${MAX_SCORE}`,
+      );
     }
 
     const [game] = await this.db
-      .select({ id: games.id, status: games.status, currentItemIndex: games.currentItemIndex })
+      .select({
+        id: games.id,
+        status: games.status,
+        currentItemIndex: games.currentItemIndex,
+      })
       .from(games)
       .where(eq(games.code, code.toUpperCase()));
     if (!game) throw new NotFoundException(`No game with code ${code}`);
@@ -402,10 +415,36 @@ export class GamesService {
     const [{ created, ...vote }] = await this.db
       .insert(votes)
       .values({ gameId: game.id, playerId, itemId: current.itemId, score })
-      .onConflictDoUpdate({ target: [votes.playerId, votes.itemId], set: { score } })
+      .onConflictDoUpdate({
+        target: [votes.playerId, votes.itemId],
+        set: { score },
+      })
       // Postgres sets xmax to 0 on a fresh insert and non-zero when the upsert updated a row.
-      .returning({ itemId: votes.itemId, score: votes.score, created: sql<boolean>`xmax = 0` });
+      .returning({
+        itemId: votes.itemId,
+        score: votes.score,
+        created: sql<boolean>`xmax = 0`,
+      });
     // Whether this is the player's first vote on the question (so who has voted changed).
     return { vote, created };
+  }
+
+  async chooseQuiz(code: string, quizId: unknown) {
+    if (!isWholeNumber(quizId)) throw new BadRequestException('quizId is required');
+    const [game] = await this.db
+      .select({
+        id: games.id,
+        status: games.status,
+      })
+      .from(games)
+      .where(eq(games.code, code.toUpperCase()));
+    if (!game) throw new NotFoundException(`No game with code ${code}`);
+    if (game.status !== 'lobby') throw new BadRequestException('Quiz has already started');
+    const questions = await this.getQuestions(quizId);
+    if (questions.length === 0) throw new NotFoundException('That quiz has no questions');
+    await this.db
+      .update(games)
+      .set({ quizId })
+      .where(and(eq(games.id, game.id), eq(games.status, 'lobby')));
   }
 }

@@ -32,18 +32,12 @@ describe('GamesController (e2e)', () => {
         id: expect.any(Number),
         code: expect.stringMatching(/^[A-Z]{4}$/),
         status: 'lobby',
-        quiz: { name: 'Foods' },
+        quiz: { id: expect.any(Number), name: 'Foods' },
         players: [],
         nextCode: null,
-        question: {
-          number: 1,
-          total: expect.any(Number),
-          item: { id: expect.any(Number), name: expect.any(String), imageUrl: null },
-          votedPlayerIds: [],
-          votes: null,
-        },
+        // The questions are copied in when the game begins.
+        question: null,
       });
-      expect(body.question.total).toBeGreaterThan(0);
     }
     expect(first.body.code).not.toBe(second.body.code);
   });

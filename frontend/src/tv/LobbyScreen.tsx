@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchServerConfig, type ServerConfig } from '../game'
 import { StartCountdown } from '../components/Countdown'
 import { type GameScreenProps } from './GameScreen'
-
+import { QuizSelector } from '../components/QuizSelector'
 // Where players should go to join, as shown on the TV:
 // 1. PUBLIC_URL, when the server has one set (a domain, or a NAS's fixed name or IP).
 // 2. Otherwise the address the TV was opened with, e.g. http://192.168.1.20:5174 on a home server.
@@ -47,16 +47,16 @@ export function LobbyScreen({ game, send, onStartOver }: GameScreenProps) {
       <p className="tagline">
         Go to <strong>{joinAddress}</strong> and join with the code
       </p>
-      <div className="game-code" role="img" aria-label={`Game code ${game.code.split('').join(' ')}`}>
+      <div
+        className="game-code"
+        role="img"
+        aria-label={`Game code ${game.code.split('').join(' ')}`}
+      >
         {game.code.split('').map((letter, i) => (
           <span key={i}>{letter}</span>
         ))}
       </div>
-      {game.quiz && (
-        <p>
-          Tonight: <strong>{game.quiz.name}</strong>
-        </p>
-      )}
+      <QuizSelector game={game} send={send} />
       {game.players.length > 0 ? (
         <ul className="players" aria-label="Players">
           {game.players.map((player) => (

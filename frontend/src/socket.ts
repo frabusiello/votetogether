@@ -106,3 +106,11 @@ export async function castVote(send: Send, code: string, playerId: number, score
   })
   return vote
 }
+
+export async function chooseQuiz(send: Send, code: string, quizId: number) {
+  const { game } = await send<{ game: Game }>('chooseQuiz', {
+    code,
+    quizId,
+  })
+  return game
+}

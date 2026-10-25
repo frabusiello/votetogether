@@ -153,7 +153,14 @@ export class GamesGateway implements OnGatewayDisconnect, OnModuleDestroy {
   }
 
   @SubscribeMessage('vote')
-  vote(@MessageBody() body: { code?: unknown; playerId?: unknown; score?: unknown }) {
+  vote(
+    @MessageBody()
+    body: {
+      code?: unknown;
+      playerId?: unknown;
+      score?: unknown;
+    },
+  ) {
     return reply(async () => {
       const code = requireCode(body);
       const { vote, created } = await this.games.vote(code, body.playerId, body.score);
@@ -163,13 +170,35 @@ export class GamesGateway implements OnGatewayDisconnect, OnModuleDestroy {
     });
   }
 
+  @SubscribeMessage('chooseQuiz')
+  chooseQuiz(
+    @MessageBody()
+    body: {
+      code?: unknown;
+      quizId?: unknown;
+    },
+  ) {
+    return reply(async () => {
+      const code = requireCode(body).toUpperCase();
+      if (this.startingSoon.has(code)) throw new ConflictException('This game is already starting');
+
+      await this.games.chooseQuiz(code, body.quizId);
+      return { game: await this.broadcast(code) };
+    });
+  }
+
   // A player tapped Next on the results for question `questionNumber`. It can't be taken back.
   // Once every connected player has, everyone moves on to the next question's results; players
   // who dropped out don't hold the others up. A tap for a question no longer showing changes
   // nothing and gets { game: null }.
   @SubscribeMessage('next-result')
   nextResult(
-    @MessageBody() body: { code?: unknown; playerId?: unknown; questionNumber?: unknown },
+    @MessageBody()
+    body: {
+      code?: unknown;
+      playerId?: unknown;
+      questionNumber?: unknown;
+    },
   ) {
     return reply(async () => {
       const code = requireCode(body).toUpperCase();
