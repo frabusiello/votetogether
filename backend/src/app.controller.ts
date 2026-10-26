@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service.js';
+import { Controller, Get } from '@nestjs/common'
+import { AppService } from './app.service.js'
 
 @Controller()
 export class AppController {
@@ -7,6 +7,6 @@ export class AppController {
 
   @Get('config')
   getConfig() {
-    return this.appService.getConfig();
+    return this.appService.getConfig()
   }
 }

@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm'
 import {
   type AnyPgColumn,
   check,
@@ -12,13 +12,13 @@ import {
   text,
   timestamp,
   unique,
-} from 'drizzle-orm/pg-core';
+} from 'drizzle-orm/pg-core'
 
 export const quizzes = pgTable('quizzes', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
-});
+})
 
 export const items = pgTable(
   'items',
@@ -34,9 +34,9 @@ export const items = pgTable(
     imageSourceUrl: text('image_source_url'),
   },
   (t) => [index('items_quiz_id_idx').on(t.quizId)],
-);
+)
 
-export const gameStatus = pgEnum('game_status', ['lobby', 'playing', 'results']);
+export const gameStatus = pgEnum('game_status', ['lobby', 'playing', 'results'])
 
 export const games = pgTable('games', {
   id: serial('id').primaryKey(),
@@ -52,7 +52,7 @@ export const games = pgTable('games', {
     onDelete: 'set null',
   }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+})
 
 // The ordered list of questions picked for a particular game.
 export const gameItems = pgTable(
@@ -70,7 +70,7 @@ export const gameItems = pgTable(
     primaryKey({ columns: [t.gameId, t.itemId] }),
     unique('game_items_game_position_uq').on(t.gameId, t.position),
   ],
-);
+)
 
 export const players = pgTable(
   'players',
@@ -83,7 +83,7 @@ export const players = pgTable(
     joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique('players_game_name_uq').on(t.gameId, t.name)],
-);
+)
 
 export const votes = pgTable(
   'votes',
@@ -106,10 +106,10 @@ export const votes = pgTable(
     index('votes_game_item_idx').on(t.gameId, t.itemId),
     check('votes_score_range', sql`${t.score} between 1 and 10`),
   ],
-);
+)
 
-export type Quiz = typeof quizzes.$inferSelect;
-export type Item = typeof items.$inferSelect;
-export type Game = typeof games.$inferSelect;
-export type Player = typeof players.$inferSelect;
-export type Vote = typeof votes.$inferSelect;
+export type Quiz = typeof quizzes.$inferSelect
+export type Item = typeof items.$inferSelect
+export type Game = typeof games.$inferSelect
+export type Player = typeof players.$inferSelect
+export type Vote = typeof votes.$inferSelect

@@ -1,6 +1,6 @@
-import { existsSync } from 'node:fs';
-import { networkInterfaces } from 'node:os';
-import { Injectable } from '@nestjs/common';
+import { existsSync } from 'node:fs'
+import { networkInterfaces } from 'node:os'
+import { Injectable } from '@nestjs/common'
 
 @Injectable()
 export class AppService {
@@ -14,16 +14,15 @@ export class AppService {
     return {
       publicUrl: process.env.PUBLIC_URL?.trim() || null,
       lanAddress: existsSync('/.dockerenv') ? null : findLanAddress(),
-    };
+    }
   }
 }
 
 function findLanAddress(): string | null {
   for (const addresses of Object.values(networkInterfaces())) {
     for (const address of addresses ?? []) {
-      if (address.family === 'IPv4' && !address.internal)
-        return address.address;
+      if (address.family === 'IPv4' && !address.internal) return address.address
     }
   }
-  return null;
+  return null
 }

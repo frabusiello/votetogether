@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { QuizzesService } from './quizzes.service.js';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common'
+import { QuizzesService } from './quizzes.service.js'
 
 @Controller('quizzes')
 export class QuizzesController {
@@ -7,6 +7,6 @@ export class QuizzesController {
 
   @Get()
   find() {
-    return this.quizzes.getAll();
+    return this.quizzes.getAll()
   }
 }

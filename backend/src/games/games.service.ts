@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { randomInt } from 'node:crypto'
 import {
   BadRequestException,
   ConflictException,
@@ -7,33 +7,33 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ServiceUnavailableException,
-} from '@nestjs/common';
-import { and, asc, count, eq, isNull, sql } from 'drizzle-orm';
-import { DB, type Db } from '../db/db.module.js';
-import { gameItems, games, items, players, quizzes, votes } from '../db/schema.js';
+} from '@nestjs/common'
+import { and, asc, count, eq, isNull, sql } from 'drizzle-orm'
+import { DB, type Db } from '../db/db.module.js'
+import { gameItems, games, items, players, quizzes, votes } from '../db/schema.js'
 
-export const CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-export const CODE_LENGTH = 4;
-const MAX_ATTEMPTS = 5;
+export const CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+export const CODE_LENGTH = 4
+const MAX_ATTEMPTS = 5
 
 // Every game uses this quiz until players can pick one.
-const DEFAULT_QUIZ_SLUG = 'foods';
+const DEFAULT_QUIZ_SLUG = 'foods'
 
-export const MAX_NAME_LENGTH = 20;
-export const MAX_PLAYERS = 20;
+export const MAX_NAME_LENGTH = 20
+export const MAX_PLAYERS = 20
 // Matches the votes_score_range check in the schema.
-const MIN_SCORE = 1;
-const MAX_SCORE = 10;
+const MIN_SCORE = 1
+const MAX_SCORE = 10
 
 export function generateCode(): string {
-  let code = '';
+  let code = ''
   for (let i = 0; i < CODE_LENGTH; i++) {
-    code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
+    code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]
   }
-  return code;
+  return code
 }
 
-export const isWholeNumber = (value: unknown): value is number => Number.isInteger(value);
+export const isWholeNumber = (value: unknown): value is number => Number.isInteger(value)
 
 @Injectable()
 export class GamesService {
@@ -43,10 +43,10 @@ export class GamesService {
     const [quiz] = await this.db
       .select({ id: quizzes.id })
       .from(quizzes)
-      .where(eq(quizzes.slug, DEFAULT_QUIZ_SLUG));
-    const questions = quiz ? await this.getQuestions(quiz.id) : [];
+      .where(eq(quizzes.slug, DEFAULT_QUIZ_SLUG))
+    const questions = quiz ? await this.getQuestions(quiz.id) : []
     if (!quiz || questions.length === 0) {
-      throw new InternalServerErrorException('Default quiz missing, run npm run db:seed');
+      throw new InternalServerErrorException('Default quiz missing, run npm run db:seed')
     }
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       // The unique index on code is what guarantees uniqueness; a clash just means try another code.
@@ -54,25 +54,25 @@ export class GamesService {
         .insert(games)
         .values({ code: generateCode(), quizId: quiz.id })
         .onConflictDoNothing({ target: games.code })
-        .returning({ code: games.code });
-      if (game) return this.getState(game.code);
+        .returning({ code: games.code })
+      if (game) return this.getState(game.code)
     }
-    throw new ServiceUnavailableException('Could not allocate a game code, try again');
+    throw new ServiceUnavailableException('Could not allocate a game code, try again')
   }
 
   // Returns the player, and whether they're new to the game (so the game changed) or rejoined.
   // `startingSoon` closes the game to new players while the lobby counts down to the start.
   async join(code: string, rawName: unknown, { startingSoon = false } = {}) {
-    const name = typeof rawName === 'string' ? rawName.trim() : '';
+    const name = typeof rawName === 'string' ? rawName.trim() : ''
     if (name.length < 1 || name.length > MAX_NAME_LENGTH) {
-      throw new BadRequestException(`Name must be 1–${MAX_NAME_LENGTH} characters`);
+      throw new BadRequestException(`Name must be 1–${MAX_NAME_LENGTH} characters`)
     }
 
     const [game] = await this.db
       .select({ id: games.id, status: games.status })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
 
     // There are no accounts, so a name is the player's identity: joining with a name that's
     // already in the game (in any case) rejoins as that player, e.g. after losing the cookie.
@@ -80,30 +80,30 @@ export class GamesService {
       this.db
         .select({ id: players.id, name: players.name })
         .from(players)
-        .where(and(eq(players.gameId, game.id), sql`lower(${players.name}) = lower(${name})`));
+        .where(and(eq(players.gameId, game.id), sql`lower(${players.name}) = lower(${name})`))
 
-    const [existing] = await findPlayer();
-    if (existing) return { player: existing, created: false };
-    if (game.status !== 'lobby') throw new ConflictException('This game has already started');
-    if (startingSoon) throw new ConflictException('This game is about to start');
+    const [existing] = await findPlayer()
+    if (existing) return { player: existing, created: false }
+    if (game.status !== 'lobby') throw new ConflictException('This game has already started')
+    if (startingSoon) throw new ConflictException('This game is about to start')
 
     // Two joins at the same moment could squeeze in a 21st player; that's fine for a party game.
     const [{ playerCount }] = await this.db
       .select({ playerCount: count() })
       .from(players)
-      .where(eq(players.gameId, game.id));
+      .where(eq(players.gameId, game.id))
     if (playerCount >= MAX_PLAYERS) {
-      throw new ConflictException(`This game is full (${MAX_PLAYERS} players)`);
+      throw new ConflictException(`This game is full (${MAX_PLAYERS} players)`)
     }
 
     const [created] = await this.db
       .insert(players)
       .values({ gameId: game.id, name })
       .onConflictDoNothing({ target: [players.gameId, players.name] })
-      .returning({ id: players.id, name: players.name });
-    if (created) return { player: created, created: true };
+      .returning({ id: players.id, name: players.name })
+    if (created) return { player: created, created: true }
     // Someone else took the name between the lookup and the insert: they're the same player.
-    return { player: (await findPlayer())[0], created: false };
+    return { player: (await findPlayer())[0], created: false }
   }
 
   async getState(code: string) {
@@ -117,8 +117,8 @@ export class GamesService {
         nextGameId: games.nextGameId,
       })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
 
     const [[quiz], gamePlayers, [currentItem], [{ total }]] = await Promise.all([
       game.quizId === null
@@ -155,14 +155,14 @@ export class GamesService {
           ),
         ),
       this.db.select({ total: count() }).from(gameItems).where(eq(gameItems.gameId, game.id)),
-    ]);
+    ])
     const [nextGame] =
       game.nextGameId === null
         ? []
         : await this.db
             .select({ code: games.code })
             .from(games)
-            .where(eq(games.id, game.nextGameId));
+            .where(eq(games.id, game.nextGameId))
 
     const questionVotes = currentItem
       ? await this.db
@@ -170,7 +170,7 @@ export class GamesService {
           .from(votes)
           .where(and(eq(votes.gameId, game.id), eq(votes.itemId, currentItem.id)))
           .orderBy(asc(votes.createdAt), asc(votes.id))
-      : [];
+      : []
 
     return {
       id: game.id,
@@ -192,7 +192,7 @@ export class GamesService {
             votes: game.status === 'results' ? questionVotes : null,
           }
         : null,
-    };
+    }
   }
 
   // The results go from the question people agreed on most to the one they disagreed on most:
@@ -201,7 +201,7 @@ export class GamesService {
   // position of the question shown `rank`th (0-based). Votes can't change once the results start,
   // so the order stays put.
   private resultPosition(gameId: number, rank: number) {
-    const spread = sql`stddev_pop(${votes.score})`;
+    const spread = sql`stddev_pop(${votes.score})`
     return this.db
       .select({ position: gameItems.position })
       .from(gameItems)
@@ -210,7 +210,7 @@ export class GamesService {
       .groupBy(gameItems.position)
       .orderBy(sql`${spread} asc nulls first`, asc(gameItems.position))
       .limit(1)
-      .offset(rank);
+      .offset(rank)
   }
 
   private async getQuestions(quizId: number) {
@@ -218,15 +218,15 @@ export class GamesService {
       .select({ id: items.id })
       .from(items)
       .where(eq(items.quizId, quizId))
-      .orderBy(asc(items.id));
+      .orderBy(asc(items.id))
   }
 
   // Checks that a player can press Start: they're in the game and it's still in the lobby. The
   // countdown itself runs on the screens; begin() moves the game on when it runs out.
   async checkCanStart(code: string, playerId: unknown) {
-    const game = await this.findGameForPlayer(code, playerId);
-    if (game.status !== 'lobby') throw new ConflictException('This game has already started');
-    return game;
+    const game = await this.findGameForPlayer(code, playerId)
+    if (game.status !== 'lobby') throw new ConflictException('This game has already started')
+    return game
   }
 
   // Moves a lobby on to the first question. Returns the new state, or null if the game had already
@@ -237,11 +237,11 @@ export class GamesService {
         .update(games)
         .set({ status: 'playing', currentItemIndex: 0 })
         .where(and(eq(games.code, code.toUpperCase()), eq(games.status, 'lobby')))
-        .returning({ id: games.id, quizId: games.quizId });
-      if (!game) return false;
-      const questions = game.quizId === null ? [] : await this.getQuestions(game.quizId);
+        .returning({ id: games.id, quizId: games.quizId })
+      if (!game) return false
+      const questions = game.quizId === null ? [] : await this.getQuestions(game.quizId)
       if (questions.length === 0) {
-        throw new InternalServerErrorException(`Game ${code} has no questions to play`);
+        throw new InternalServerErrorException(`Game ${code} has no questions to play`)
       }
       await tx.insert(gameItems).values(
         questions.map((item, position) => ({
@@ -249,33 +249,33 @@ export class GamesService {
           itemId: item.id,
           position,
         })),
-      );
-      return true;
-    });
-    return begun ? this.getState(code) : null;
+      )
+      return true
+    })
+    return begun ? this.getState(code) : null
   }
 
   // Moves on from question `fromNumber` (1-based) to the next one, or to the results after the last.
   // Returns the new state, or null if the game is no longer on that question (someone else already
   // moved it on).
   async advance(code: string, fromNumber: unknown) {
-    if (!isWholeNumber(fromNumber)) throw new BadRequestException('questionNumber is required');
+    if (!isWholeNumber(fromNumber)) throw new BadRequestException('questionNumber is required')
 
     const [game] = await this.db
       .select({ id: games.id })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
     const [{ total }] = await this.db
       .select({ total: count() })
       .from(gameItems)
-      .where(eq(gameItems.gameId, game.id));
+      .where(eq(gameItems.gameId, game.id))
 
     // After the last question the results start from the top of their order (see resultPosition).
     const next: Partial<typeof games.$inferInsert> =
       fromNumber < total
         ? { currentItemIndex: fromNumber }
-        : { status: 'results', currentItemIndex: 0 };
+        : { status: 'results', currentItemIndex: 0 }
     const advanced = await this.db
       .update(games)
       .set(next)
@@ -286,8 +286,8 @@ export class GamesService {
           eq(games.currentItemIndex, fromNumber - 1),
         ),
       )
-      .returning({ id: games.id });
-    return advanced.length > 0 ? this.getState(code) : null;
+      .returning({ id: games.id })
+    return advanced.length > 0 ? this.getState(code) : null
   }
 
   // In the results, moves on from question `fromNumber`'s results to the next question's. Returns
@@ -297,13 +297,13 @@ export class GamesService {
     const [game] = await this.db
       .select({ id: games.id })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
     const [{ total }] = await this.db
       .select({ total: count() })
       .from(gameItems)
-      .where(eq(gameItems.gameId, game.id));
-    if (fromNumber >= total) return null;
+      .where(eq(gameItems.gameId, game.id))
+    if (fromNumber >= total) return null
 
     const moved = await this.db
       .update(games)
@@ -315,8 +315,8 @@ export class GamesService {
           eq(games.currentItemIndex, fromNumber - 1),
         ),
       )
-      .returning({ id: games.id });
-    return moved.length > 0 ? this.getState(code) : null;
+      .returning({ id: games.id })
+    return moved.length > 0 ? this.getState(code) : null
   }
 
   // At the end of the results, starts a new game for the same players (Back to the lobby): a new
@@ -332,67 +332,67 @@ export class GamesService {
         nextGameId: games.nextGameId,
       })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
     // Someone else already started it: everyone goes to the same new game.
-    if (game.nextGameId !== null) return this.getState(code);
+    if (game.nextGameId !== null) return this.getState(code)
 
     const [{ total }] = await this.db
       .select({ total: count() })
       .from(gameItems)
-      .where(eq(gameItems.gameId, game.id));
-    if (game.status !== 'results' || game.currentItemIndex !== total - 1) return null;
+      .where(eq(gameItems.gameId, game.id))
+    if (game.status !== 'results' || game.currentItemIndex !== total - 1) return null
 
-    const next = await this.create();
+    const next = await this.create()
     const linked = await this.db.transaction(async (tx) => {
       const [link] = await tx
         .update(games)
         .set({ nextGameId: next.id })
         .where(and(eq(games.id, game.id), isNull(games.nextGameId)))
-        .returning({ id: games.id });
-      if (!link) return false;
+        .returning({ id: games.id })
+      if (!link) return false
       // Everyone's already in the new lobby, under the same names, so their phones can rejoin.
       const names = await tx
         .select({ name: players.name })
         .from(players)
         .where(eq(players.gameId, game.id))
-        .orderBy(asc(players.joinedAt), asc(players.id));
+        .orderBy(asc(players.joinedAt), asc(players.id))
       if (names.length > 0) {
-        await tx.insert(players).values(names.map(({ name }) => ({ gameId: next.id, name })));
+        await tx.insert(players).values(names.map(({ name }) => ({ gameId: next.id, name })))
       }
-      return true;
-    });
+      return true
+    })
     // Two taps at once: the other one's game won, so drop this one.
-    if (!linked) await this.db.delete(games).where(eq(games.id, next.id));
-    return this.getState(code);
+    if (!linked) await this.db.delete(games).where(eq(games.id, next.id))
+    return this.getState(code)
   }
 
   // Throws unless `playerId` is a player in the game.
   async findGameForPlayer(code: string, playerId: unknown) {
-    if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required');
+    if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required')
 
     const [game] = await this.db
       .select({ id: games.id, status: games.status })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
 
     const [player] = await this.db
       .select({ id: players.id })
       .from(players)
-      .where(and(eq(players.id, playerId), eq(players.gameId, game.id)));
-    if (!player) throw new NotFoundException("You're not in this game");
-    return game;
+      .where(and(eq(players.id, playerId), eq(players.gameId, game.id)))
+    if (!player) throw new NotFoundException("You're not in this game")
+    return game
   }
 
   // Records a player's 1–10 score for the game's current question. Voting again changes the score.
   // Returns the vote, and whether it's the player's first on this question.
   async vote(code: string, playerId: unknown, score: unknown) {
-    if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required');
+    if (!isWholeNumber(playerId)) throw new BadRequestException('playerId is required')
     if (!isWholeNumber(score) || score < MIN_SCORE || score > MAX_SCORE) {
       throw new BadRequestException(
         `Score must be a whole number from ${MIN_SCORE} to ${MAX_SCORE}`,
-      );
+      )
     }
 
     const [game] = await this.db
@@ -402,9 +402,9 @@ export class GamesService {
         currentItemIndex: games.currentItemIndex,
       })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
-    if (game.status !== 'playing') throw new ConflictException("Voting isn't open right now");
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
+    if (game.status !== 'playing') throw new ConflictException("Voting isn't open right now")
 
     const [[player], [current]] = await Promise.all([
       this.db
@@ -415,9 +415,9 @@ export class GamesService {
         .select({ itemId: gameItems.itemId })
         .from(gameItems)
         .where(and(eq(gameItems.gameId, game.id), eq(gameItems.position, game.currentItemIndex))),
-    ]);
-    if (!player) throw new NotFoundException("You're not in this game");
-    if (!current) throw new ConflictException('There is no question to vote on');
+    ])
+    if (!player) throw new NotFoundException("You're not in this game")
+    if (!current) throw new ConflictException('There is no question to vote on')
 
     const [{ created, ...vote }] = await this.db
       .insert(votes)
@@ -431,27 +431,27 @@ export class GamesService {
         itemId: votes.itemId,
         score: votes.score,
         created: sql<boolean>`xmax = 0`,
-      });
+      })
     // Whether this is the player's first vote on the question (so who has voted changed).
-    return { vote, created };
+    return { vote, created }
   }
 
   async chooseQuiz(code: string, quizId: unknown) {
-    if (!isWholeNumber(quizId)) throw new BadRequestException('quizId is required');
+    if (!isWholeNumber(quizId)) throw new BadRequestException('quizId is required')
     const [game] = await this.db
       .select({
         id: games.id,
         status: games.status,
       })
       .from(games)
-      .where(eq(games.code, code.toUpperCase()));
-    if (!game) throw new NotFoundException(`No game with code ${code}`);
-    if (game.status !== 'lobby') throw new BadRequestException('Quiz has already started');
-    const questions = await this.getQuestions(quizId);
-    if (questions.length === 0) throw new NotFoundException('That quiz has no questions');
+      .where(eq(games.code, code.toUpperCase()))
+    if (!game) throw new NotFoundException(`No game with code ${code}`)
+    if (game.status !== 'lobby') throw new BadRequestException('Quiz has already started')
+    const questions = await this.getQuestions(quizId)
+    if (questions.length === 0) throw new NotFoundException('That quiz has no questions')
     await this.db
       .update(games)
       .set({ quizId })
-      .where(and(eq(games.id, game.id), eq(games.status, 'lobby')));
+      .where(and(eq(games.id, game.id), eq(games.status, 'lobby')))
   }
 }

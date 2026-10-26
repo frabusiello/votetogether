@@ -1,14 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, type Db } from '../db/db.module.js';
-import { count, eq } from 'drizzle-orm';
-import {
-  gameItems,
-  games,
-  items,
-  players,
-  quizzes,
-  votes,
-} from '../db/schema.js';
+import { Inject, Injectable } from '@nestjs/common'
+import { DB, type Db } from '../db/db.module.js'
+import { count, eq } from 'drizzle-orm'
+import { gameItems, games, items, players, quizzes, votes } from '../db/schema.js'
 
 @Injectable()
 export class QuizzesService {
@@ -24,7 +17,7 @@ export class QuizzesService {
       .from(quizzes)
       .innerJoin(items, eq(items.quizId, quizzes.id))
       .groupBy(quizzes.id)
-      .orderBy(quizzes.name);
-    return quizList;
+      .orderBy(quizzes.name)
+    return quizList
   }
 }
