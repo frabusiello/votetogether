@@ -633,3 +633,180 @@ insert into items (quiz_id, name, image_url, image_author, image_licence, image_
   where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Energy drinks');
 
 commit;
+
+-- Statements people argue about, from Reddit's controversial-opinion threads. 10 = agree, 1 = disagree.
+begin;
+
+-- unpopular-opinions
+insert into quizzes (slug, name) values ('unpopular-opinions', 'Unpopular opinions') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A beach holiday is a waste of time', 'https://upload.wikimedia.org/wikipedia/commons/3/39/Crowded_Brighton_beach_east_of_Palace_Pier_-_geograph.org.uk_-_1338809.jpg', 'David Hawgood', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Crowded_Brighton_beach_east_of_Palace_Pier_-_geograph.org.uk_-_1338809.jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A beach holiday is a waste of time');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'You''re not vegetarian if you eat fish', 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Plated_grilled_fish_%28cropped%29.jpg', 'pompi', 'CC0', 'https://commons.wikimedia.org/wiki/File:Plated_grilled_fish_(cropped).jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'You''re not vegetarian if you eat fish');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Coriander tastes like soap', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/A_scene_of_Coriander_leaves.JPG/960px-A_scene_of_Coriander_leaves.JPG', 'Thamizhpparithi Maari', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:A_scene_of_Coriander_leaves.JPG'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Coriander tastes like soap');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Charcuterie boards are a scam', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Traditional_Charcuterie_Board.png/960px-Traditional_Charcuterie_Board.png', 'TammyBellBells', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Traditional_Charcuterie_Board.png'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Charcuterie boards are a scam');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Starbucks isn''t worth the money', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Starbucks_Coffee_%2829871391053%29.jpg/960px-Starbucks_Coffee_%2829871391053%29.jpg', 'GoToVan from Vancouver, Canada', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Starbucks_Coffee_(29871391053).jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Starbucks isn''t worth the money');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Runny egg yolks are gross', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Fried_egg_cooking_in_a_pan.jpg/960px-Fried_egg_cooking_in_a_pan.jpg', 'Horacio Cambeiro', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Fried_egg_cooking_in_a_pan.jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Runny egg yolks are gross');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Nuts ruin brownies', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Fresh_Baked_Brownies_%28Unsplash%29.jpg/960px-Fresh_Baked_Brownies_%28Unsplash%29.jpg', 'Jade Wulfraat', 'CC0', 'https://commons.wikimedia.org/wiki/File:Fresh_Baked_Brownies_(Unsplash).jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Nuts ruin brownies');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cold leftovers beat reheated', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Food_Safety_-_Cut_Waste_in_Refrigerators_%2820200608-FSIS-LSC-0093%29.jpg/960px-Food_Safety_-_Cut_Waste_in_Refrigerators_%2820200608-FSIS-LSC-0093%29.jpg', 'USDAgov', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Food_Safety_-_Cut_Waste_in_Refrigerators_(20200608-FSIS-LSC-0093).jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cold leftovers beat reheated');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Avocado has no taste', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Avocado_-_single_and_halved.jpg/960px-Avocado_-_single_and_halved.jpg', 'Splintercell10', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Avocado_-_single_and_halved.jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Avocado has no taste');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cereal is a dessert', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Bowl_of_Cereal_%28Unsplash%29.jpg/960px-Bowl_of_Cereal_%28Unsplash%29.jpg', 'Yvens Banatte', 'CC0', 'https://commons.wikimedia.org/wiki/File:Bowl_of_Cereal_(Unsplash).jpg'
+  from quizzes q
+  where slug = 'unpopular-opinions' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cereal is a dessert');
+
+-- etiquette-wars
+insert into quizzes (slug, name) values ('etiquette-wars', 'Etiquette wars') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Child-free weddings are fine', 'https://upload.wikimedia.org/wikipedia/commons/9/96/Group._At_Moishe%27s_BAnQ_P48S1P13644.jpg', 'Conrad Poirier', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Group._At_Moishe%27s_BAnQ_P48S1P13644.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Child-free weddings are fine');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Split the bill evenly, even if you only had a salad', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/HK_SKD_TKO_%E5%B0%87%E8%BB%8D%E6%BE%B3_Tseung_Kwan_O_%E5%9D%91%E5%8F%A3_Hang_Hau_%E6%9D%B1%E6%B8%AF%E5%9F%8E_East_Point_City_mall_shop_%E4%B8%8A%E6%B5%B7_%E8%AC%9D%E8%AC%9D%E5%84%82%E9%A4%90%E5%BB%B3_Shanghai_Xie_Xie_Nogn_Restaurant_bill_receipt_July_2021_SS2.jpg/960px-thumbnail.jpg', 'Hiqwm Wreop Uis', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:HK_SKD_TKO_%E5%B0%87%E8%BB%8D%E6%BE%B3_Tseung_Kwan_O_%E5%9D%91%E5%8F%A3_Hang_Hau_%E6%9D%B1%E6%B8%AF%E5%9F%8E_East_Point_City_mall_shop_%E4%B8%8A%E6%B5%B7_%E8%AC%9D%E8%AC%9D%E5%84%82%E9%A4%90%E5%BB%B3_Shanghai_Xie_Xie_Nogn_Restaurant_bill_receipt_July_2021_SS2.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Split the bill evenly, even if you only had a salad');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Dogs belong in pubs and restaurants', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/Dog_resting_peacefully_closeup.jpg/960px-Dog_resting_peacefully_closeup.jpg', 'Shixart1985', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Dog_resting_peacefully_closeup.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Dogs belong in pubs and restaurants');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Phones on the dinner table are rude', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Burritos_Grill_Eastern_New_Orleans_Sept_2017_5.jpg/960px-Burritos_Grill_Eastern_New_Orleans_Sept_2017_5.jpg', 'Infrogmation of New Orleans', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Burritos_Grill_Eastern_New_Orleans_Sept_2017_5.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Phones on the dinner table are rude');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Ghosting after one date is fine', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Woman_looking_at_phone_in_a_casual_setting_while_smiling_and_enjoying_the_moment_with_a_relaxed_atmosphere.jpg/960px-Woman_looking_at_phone_in_a_casual_setting_while_smiling_and_enjoying_the_moment_with_a_relaxed_atmosphere.jpg', 'Shixart1985', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Woman_looking_at_phone_in_a_casual_setting_while_smiling_and_enjoying_the_moment_with_a_relaxed_atmosphere.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Ghosting after one date is fine');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Kids don''t belong in fancy restaurants', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/2022_Maastricht%2C_Ch%C3%A2teau_Neercanne_%2807%29.jpg/960px-2022_Maastricht%2C_Ch%C3%A2teau_Neercanne_%2807%29.jpg', 'Kleon3', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:2022_Maastricht,_Ch%C3%A2teau_Neercanne_(07).jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Kids don''t belong in fancy restaurants');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Tipping should be scrapped', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Student%27s_tip_jar.jpg/960px-Student%27s_tip_jar.jpg', 'tadhanna (Pixabay)', 'CC0', 'https://commons.wikimedia.org/wiki/File:Student%27s_tip_jar.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Tipping should be scrapped');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, '''No gifts'' means no gifts', 'https://upload.wikimedia.org/wikipedia/commons/9/9a/Decorative_cake_in_shape_of_a_present%2C_with_large_orange_bow.jpg', 'Steven Depolo', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Decorative_cake_in_shape_of_a_present,_with_large_orange_bow.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = '''No gifts'' means no gifts');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Voice notes are rude', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Smartphone_Use.jpg/960px-Smartphone_Use.jpg', 'Océanos y dados', 'CC0', 'https://commons.wikimedia.org/wiki/File:Smartphone_Use.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Voice notes are rude');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Ten minutes late is on time', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/Quartz_wristwatch_Mondaine_Classic_Pure_A660.30314.16OM.jpg/960px-Quartz_wristwatch_Mondaine_Classic_Pure_A660.30314.16OM.jpg', 'Alex P. Kok', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Quartz_wristwatch_Mondaine_Classic_Pure_A660.30314.16OM.jpg'
+  from quizzes q
+  where slug = 'etiquette-wars' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Ten minutes late is on time');
+
+-- the-ick (10 = big ick)
+insert into quizzes (slug, name) values ('the-ick', 'The ick') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Calling your mum every day', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Woman_talks_on_phone_while_sitting_at_a_table_in_an_outdoor_cafe_during_the_day.jpg/960px-Woman_talks_on_phone_while_sitting_at_a_table_in_an_outdoor_cafe_during_the_day.jpg', 'Shixart1985', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Woman_talks_on_phone_while_sitting_at_a_table_in_an_outdoor_cafe_during_the_day.jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Calling your mum every day');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Splitting the bill to the penny', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Pile_of_Pennies_4_%2825257777124%29.jpg/960px-Pile_of_Pennies_4_%2825257777124%29.jpg', 'cweyant from Syracuse, United States', 'CC0', 'https://commons.wikimedia.org/wiki/File:Pile_of_Pennies_4_(25257777124).jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Splitting the bill to the penny');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Talking about crypto', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Bitcoin_BTC_golden_coin_with_the_symbol.jpg/960px-Bitcoin_BTC_golden_coin_with_the_symbol.jpg', 'Satheesh Sankaran', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Bitcoin_BTC_golden_coin_with_the_symbol.jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Talking about crypto');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Clapping when the plane lands', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Airplane_landing_at_zurich_airport.jpg/960px-Airplane_landing_at_zurich_airport.jpg', 'Kuhnmi', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Airplane_landing_at_zurich_airport.jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Clapping when the plane lands');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Baby voice', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/Couple_in_Seafront_Restaurant_-_16_x_9_Photo_-_Kep_-_Cambodia_%2848543450402%29.jpg/960px-Couple_in_Seafront_Restaurant_-_16_x_9_Photo_-_Kep_-_Cambodia_%2848543450402%29.jpg', 'Adam Jones from Kelowna, BC, Canada', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Couple_in_Seafront_Restaurant_-_16_x_9_Photo_-_Kep_-_Cambodia_(48543450402).jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Baby voice');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Fedoras', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Indiana_Jones_fedora_hat.jpg/960px-Indiana_Jones_fedora_hat.jpg', 'Clément Bucco-Lechat', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Indiana_Jones_fedora_hat.jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Fedoras');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Running for the bus', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Arriva_London_bus_HV81_%28LJ62_BJX%29_at_Lynmouth_Road_stop%2C_Stamford_Hill%2C_27_April_2013.jpg/960px-Arriva_London_bus_HV81_%28LJ62_BJX%29_at_Lynmouth_Road_stop%2C_Stamford_Hill%2C_27_April_2013.jpg', 'David McKay', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Arriva_London_bus_HV81_(LJ62_BJX)_at_Lynmouth_Road_stop,_Stamford_Hill,_27_April_2013.jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Running for the bus');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Socks in bed', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/19/Socks_-_Komi-Permyak_-_Meshkov_house.jpg/960px-Socks_-_Komi-Permyak_-_Meshkov_house.jpg', 'Лапоть', 'CC0', 'https://commons.wikimedia.org/wiki/File:Socks_-_Komi-Permyak_-_Meshkov_house.jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Socks in bed');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Being rude to waiters', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/The_waiter_works_in_a_restaurant_in_a_medical_mask%2C_gloves_during_coronavirus_pandemic.jpg/960px-The_waiter_works_in_a_restaurant_in_a_medical_mask%2C_gloves_during_coronavirus_pandemic.jpg', 'Vuong Tran', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:The_waiter_works_in_a_restaurant_in_a_medical_mask,_gloves_during_coronavirus_pandemic.jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Being rude to waiters');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Having no books at home', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Moscow%2C_VDNKh%2C_empty_bookshelf_on_an_open-air_deck_%2819187617471%29.jpg/960px-Moscow%2C_VDNKh%2C_empty_bookshelf_on_an_open-air_deck_%2819187617471%29.jpg', 'Gennady Grachev from Moscow, Russia', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Moscow,_VDNKh,_empty_bookshelf_on_an_open-air_deck_(19187617471).jpg'
+  from quizzes q
+  where slug = 'the-ick' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Having no books at home');
+
+-- overhyped (10 = massively overhyped)
+insert into quizzes (slug, name) values ('overhyped', 'Overhyped') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Friends (the TV show)', 'https://upload.wikimedia.org/wikipedia/commons/c/c9/The_Central_Perk_Set_from_Friends_%287823245828%29.jpg', 'Stuart Sevastos', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:The_Central_Perk_Set_from_Friends_(7823245828).jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Friends (the TV show)');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Brunch', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Eggs_Benedict-01-cropped.jpg/960px-Eggs_Benedict-01-cropped.jpg', 'Jon Mountjoy', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Eggs_Benedict-01-cropped.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Brunch');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Seinfeld', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Tom%27s_Restaurant%2C_NYC.jpg/960px-Tom%27s_Restaurant%2C_NYC.jpg', 'Rick Dikeman', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Tom%27s_Restaurant,_NYC.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Seinfeld');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Bacon', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Irish_breakfast%2C_cooked.JPG/960px-Irish_breakfast%2C_cooked.JPG', 'O''Dea', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Irish_breakfast,_cooked.JPG'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Bacon');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Truffle anything', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Truffe02.jpg/960px-Truffe02.jpg', null, 'Public domain', 'https://commons.wikimedia.org/wiki/File:Truffe02.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Truffle anything');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Disneyland', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Sleeping_Beauty_Castle_2019.jpg/960px-Sleeping_Beauty_Castle_2019.jpg', 'CrispyCream27', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Sleeping_Beauty_Castle_2019.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Disneyland');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cheese', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Quesos-LaRural-00921.jpg/960px-Quesos-LaRural-00921.jpg', 'Ezarate', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Quesos-LaRural-00921.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cheese');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Oysters', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Oysters_served_on_ice.jpg/960px-Oysters_served_on_ice.jpg', 'sanjay_ach', 'CC BY 4.0', 'https://commons.wikimedia.org/wiki/File:Oysters_served_on_ice.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Oysters');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'The Beatles', 'https://upload.wikimedia.org/wikipedia/commons/5/56/The_Beatles_Abbey_Road_zebra_crossing_-_geograph.org.uk_-_3134962.jpg', 'Thomas Nugent', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:The_Beatles_Abbey_Road_zebra_crossing_-_geograph.org.uk_-_3134962.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'The Beatles');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Christmas', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Christmas_tree_lights_photographed_with_moving_camera.jpg/960px-Christmas_tree_lights_photographed_with_moving_camera.jpg', 'Annatsach', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Christmas_tree_lights_photographed_with_moving_camera.jpg'
+  from quizzes q
+  where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Christmas');
+
+commit;
