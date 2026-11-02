@@ -810,3 +810,97 @@ insert into items (quiz_id, name, image_url, image_author, image_licence, image_
   where slug = 'overhyped' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Christmas');
 
 commit;
+
+-- Mildly infuriating: 10 = absolutely fuming, 1 = doesn't bother me.
+begin;
+
+insert into quizzes (slug, name) values ('mildly-infuriating', 'Mildly infuriating') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'People who stop at the top of the escalator', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/Copenhagen_Metro_escalators.jpg/960px-Copenhagen_Metro_escalators.jpg', 'Stig Nygaard from Copenhagen, Denmark', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Copenhagen_Metro_escalators.jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'People who stop at the top of the escalator');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Unexpected item in the bagging area', 'https://upload.wikimedia.org/wikipedia/commons/9/95/Self_Checkout_UK_2008.jpg', 'pin add', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Self_Checkout_UK_2008.jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Unexpected item in the bagging area');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A USB plug that never goes in first time', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/USB_A_Connector_Dual_Side.JPG/960px-USB_A_Connector_Dual_Side.JPG', 'wdwd', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:USB_A_Connector_Dual_Side.JPG'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A USB plug that never goes in first time');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Slow walkers taking up the whole pavement', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Crowded_Downtown_Sidewalk_%282804409846%29.jpg/960px-Crowded_Downtown_Sidewalk_%282804409846%29.jpg', 'IowaPolitics.com', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Crowded_Downtown_Sidewalk_(2804409846).jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Slow walkers taking up the whole pavement');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Stickers that won''t peel off cleanly', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Fruit_label_used_on_a_honeydew_melon.jpg/960px-Fruit_label_used_on_a_honeydew_melon.jpg', 'Downtowngal', 'CC0', 'https://commons.wikimedia.org/wiki/File:Fruit_label_used_on_a_honeydew_melon.jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Stickers that won''t peel off cleanly');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Stepping in water in your socks', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Z%C3%BCrich_%28Schweiz%29_--_2011_--_1396.jpg/960px-Z%C3%BCrich_%28Schweiz%29_--_2011_--_1396.jpg', 'Dietmar Rabich', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Z%C3%BCrich_(Schweiz)_--_2011_--_1396.jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Stepping in water in your socks');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Your phone dying at 1%', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/XiaomiMiNote2charging20210904183242.jpg/960px-XiaomiMiNote2charging20210904183242.jpg', 'OnionBulb', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:XiaomiMiNote2charging20210904183242.jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Your phone dying at 1%');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Crisp packets that are half air', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/2020-09-29_21_13_53_A_bag_of_Utz_Ripples_Original_Potato_Chips_in_the_Dulles_section_of_Sterling%2C_Loudoun_County%2C_Virginia.jpg/960px-2020-09-29_21_13_53_A_bag_of_Utz_Ripples_Original_Potato_Chips_in_the_Dulles_section_of_Sterling%2C_Loudoun_County%2C_Virginia.jpg', 'Famartin', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:2020-09-29_21_13_53_A_bag_of_Utz_Ripples_Original_Potato_Chips_in_the_Dulles_section_of_Sterling,_Loudoun_County,_Virginia.jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Crisp packets that are half air');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'No thank you when you hold the door', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/The_Bay_Queen_Street_revolving_door_entrance_%2849975840732%29.jpg/960px-The_Bay_Queen_Street_revolving_door_entrance_%2849975840732%29.jpg', 'Ben Schumin from Montgomery Village, Maryland, USA', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:The_Bay_Queen_Street_revolving_door_entrance_(49975840732).jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'No thank you when you hold the door');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Tangled headphones', 'https://upload.wikimedia.org/wikipedia/commons/6/6c/Tangled_cables_on_Modular_synthesizer_-_Tokyo_Festival_of_Modular_2014_-_Day_1_%282014-06-07%29.jpg', 'Kazuhisa OTSUBO from Tokyo, Japan', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Tangled_cables_on_Modular_synthesizer_-_Tokyo_Festival_of_Modular_2014_-_Day_1_(2014-06-07).jpg'
+  from quizzes q
+  where slug = 'mildly-infuriating' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Tangled headphones');
+
+commit;
+
+-- Annoying habits: things people do that drive others up the wall. 10 = very annoying.
+begin;
+
+insert into quizzes (slug, name) values ('annoying-habits', 'Annoying habits') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Chewing with your mouth open', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/Man_eating_bacon_roll_Sclater_Street_Yard_Brick_Lane_Market_Tower_Hamlets_London_England.jpg/960px-Man_eating_bacon_roll_Sclater_Street_Yard_Brick_Lane_Market_Tower_Hamlets_London_England.jpg', 'Acabashi', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Man_eating_bacon_roll_Sclater_Street_Yard_Brick_Lane_Market_Tower_Hamlets_London_England.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Chewing with your mouth open');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Phone calls on speaker in public', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Wyr%C4%99ba%2C_Poland_%28Unsplash%29.jpg/960px-Wyr%C4%99ba%2C_Poland_%28Unsplash%29.jpg', 'freestocks.org', 'CC0', 'https://commons.wikimedia.org/wiki/File:Wyr%C4%99ba,_Poland_(Unsplash).jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Phone calls on speaker in public');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Reply-all emails', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Mailpile-inbox.png/960px-Mailpile-inbox.png', 'BrennanNovak', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Mailpile-inbox.png'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Reply-all emails');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Leaving one sheet on the toilet roll', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Toilet_paper_orientation_over.jpg/960px-Toilet_paper_orientation_over.jpg', 'Elya', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Toilet_paper_orientation_over.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Leaving one sheet on the toilet roll');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Clipping nails in public', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/2023_Obcinacze_do_paznokci.jpg/960px-2023_Obcinacze_do_paznokci.jpg', 'Jacek Halicki', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:2023_Obcinacze_do_paznokci.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Clipping nails in public');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Kicking the back of your seat', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/HK_%E5%95%9F%E5%BE%B7%E5%95%86%E5%A0%B4_AirSide_Kai_Tak_Mall_%E9%9B%BB%E5%BD%B1%E9%99%A2_MCL_Cinemas_room_interior_row_seats_January_2024_R12S_03.jpg/960px-HK_%E5%95%9F%E5%BE%B7%E5%95%86%E5%A0%B4_AirSide_Kai_Tak_Mall_%E9%9B%BB%E5%BD%B1%E9%99%A2_MCL_Cinemas_room_interior_row_seats_January_2024_R12S_03.jpg', 'Ah Bo Bo Maisy 2024', 'CC0', 'https://commons.wikimedia.org/wiki/File:HK_%E5%95%9F%E5%BE%B7%E5%95%86%E5%A0%B4_AirSide_Kai_Tak_Mall_%E9%9B%BB%E5%BD%B1%E9%99%A2_MCL_Cinemas_room_interior_row_seats_January_2024_R12S_03.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Kicking the back of your seat');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Not using indicators', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/M%C3%BCnster%2C_Beresa%2C_Mercedes-Benz_C-Klasse_Cabrio_--_2018_--_1757.jpg/960px-M%C3%BCnster%2C_Beresa%2C_Mercedes-Benz_C-Klasse_Cabrio_--_2018_--_1757.jpg', 'Dietmar Rabich', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:M%C3%BCnster,_Beresa,_Mercedes-Benz_C-Klasse_Cabrio_--_2018_--_1757.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Not using indicators');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Leaving dishes ''to soak''', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Dirty_dishes_in_the_sink.jpg/960px-Dirty_dishes_in_the_sink.jpg', 'Shixart1985', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Dirty_dishes_in_the_sink.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Leaving dishes ''to soak''');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Sniffing instead of blowing your nose', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/A_tissue_box.jpg/960px-A_tissue_box.jpg', 'Captain MarcusL', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:A_tissue_box.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Sniffing instead of blowing your nose');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Spoiling the ending of a show', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Woman_sitting_on_a_couch_watching_television_while_covered_with_a_blanket.jpg/960px-Woman_sitting_on_a_couch_watching_television_while_covered_with_a_blanket.jpg', 'Shixart1985', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Woman_sitting_on_a_couch_watching_television_while_covered_with_a_blanket.jpg'
+  from quizzes q
+  where slug = 'annoying-habits' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Spoiling the ending of a show');
+
+commit;
