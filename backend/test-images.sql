@@ -456,3 +456,180 @@ insert into items (quiz_id, name, image_url, image_author, image_licence, image_
   where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'An ostrich would beat a kangaroo');
 
 commit;
+
+-- Disney movies (loosely related photos, no posters on Commons), fruit, trends, and things Gen Z likes.
+begin;
+
+-- disney-movies
+insert into quizzes (slug, name) values ('disney-movies', 'Disney movies') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'The Little Mermaid', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Robert_Panitzsch_-_K%C3%B8benhavns_havn_med_den_lille_havfrue_-_1938.png/960px-Robert_Panitzsch_-_K%C3%B8benhavns_havn_med_den_lille_havfrue_-_1938.png', 'Robert Panitzsch', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Robert_Panitzsch_-_K%C3%B8benhavns_havn_med_den_lille_havfrue_-_1938.png'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'The Little Mermaid');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Aladdin', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Oil_Lamp_in_the_Form_of_a_Monster.jpg/960px-Oil_Lamp_in_the_Form_of_a_Monster.jpg', 'North Italian 16th Century', 'CC BY 4.0', 'https://commons.wikimedia.org/wiki/File:Oil_Lamp_in_the_Form_of_a_Monster.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Aladdin');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Moana', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Outrigger_canoe_in_Kenya.jpg/960px-Outrigger_canoe_in_Kenya.jpg', 'Giorgio Montersino', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Outrigger_canoe_in_Kenya.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Moana');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Beauty and the Beast', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Red_rose_with_black_background.jpg/960px-Red_rose_with_black_background.jpg', 'Laitche', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Red_rose_with_black_background.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Beauty and the Beast');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Finding Nemo', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Amphiprion_ocellaris_%28Clown_anemonefish%29_by_Nick_Hobgood.jpg/960px-Amphiprion_ocellaris_%28Clown_anemonefish%29_by_Nick_Hobgood.jpg', 'Nick Hobgood', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Amphiprion_ocellaris_(Clown_anemonefish)_by_Nick_Hobgood.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Finding Nemo');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Ratatouille', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Brown_rat_%28Rattus_norvegicus%29_Drenthe_2.jpg/960px-Brown_rat_%28Rattus_norvegicus%29_Drenthe_2.jpg', 'Charles J. Sharp', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Brown_rat_(Rattus_norvegicus)_Drenthe_2.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Ratatouille');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Up', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Hotair_balloons_amk.jpg/960px-Hotair_balloons_amk.jpg', 'AngMoKio', 'CC BY-SA 2.5', 'https://commons.wikimedia.org/wiki/File:Hotair_balloons_amk.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Up');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Coco', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Ofrenda_en_la_Feria_de_Tlaxcala_2025.jpg/960px-Ofrenda_en_la_Feria_de_Tlaxcala_2025.jpg', 'Isaacvp', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Ofrenda_en_la_Feria_de_Tlaxcala_2025.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Coco');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Tangled', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Pingxi_Sky_Lantern_Festival_2014_in_Taiwan_-_12431713344.jpg/960px-Pingxi_Sky_Lantern_Festival_2014_in_Taiwan_-_12431713344.jpg', 'Jirka Matousek', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Pingxi_Sky_Lantern_Festival_2014_in_Taiwan_-_12431713344.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Tangled');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Mulan', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/20090529_Great_Wall_8185.jpg/960px-20090529_Great_Wall_8185.jpg', 'Jakub Hałun', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:20090529_Great_Wall_8185.jpg'
+  from quizzes q
+  where slug = 'disney-movies' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Mulan');
+
+-- fruit
+insert into quizzes (slug, name) values ('fruit', 'Fruit') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Banana', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Bananas_on_black_background_02.jpg/960px-Bananas_on_black_background_02.jpg', 'Krzysztof Golik', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Bananas_on_black_background_02.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Banana');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Mango', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Mangos_-_single_and_halved.jpg/960px-Mangos_-_single_and_halved.jpg', 'Ivar Leidus', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Mangos_-_single_and_halved.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Mango');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Kiwi', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Kiwifruit_halved.jpg/960px-Kiwifruit_halved.jpg', 'Tiia Monto', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Kiwifruit_halved.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Kiwi');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Grapefruit', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Citrus_paradisi_%28Grapefruit%2C_pink%29_white_bg.jpg/960px-Citrus_paradisi_%28Grapefruit%2C_pink%29_white_bg.jpg', 'א (Aleph)', 'CC BY-SA 2.5', 'https://commons.wikimedia.org/wiki/File:Citrus_paradisi_(Grapefruit,_pink)_white_bg.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Grapefruit');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Pomegranate', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/An_opened_pomegranate.JPG/960px-An_opened_pomegranate.JPG', 'Anton Croos', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:An_opened_pomegranate.JPG'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Pomegranate');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Papaya', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Papaya_-_longitudinal_section.jpg/960px-Papaya_-_longitudinal_section.jpg', 'Ivar Leidus', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Papaya_-_longitudinal_section.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Papaya');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Lychee', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Lychee_fruits_and_seed.jpg/960px-Lychee_fruits_and_seed.jpg', 'Ivar Leidus', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Lychee_fruits_and_seed.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Lychee');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Watermelon', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/Sliced_Watermelon.jpg/960px-Sliced_Watermelon.jpg', 'Harsha K R', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Sliced_Watermelon.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Watermelon');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Figs', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Fig_%28Ficus_carica%29_fruits.jpg/960px-Fig_%28Ficus_carica%29_fruits.jpg', 'Ivar Leidus', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Fig_(Ficus_carica)_fruits.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Figs');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Blueberries', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Aberdeenshire_blueberries.jpg/960px-Aberdeenshire_blueberries.jpg', 'Mx. Granger', 'CC0', 'https://commons.wikimedia.org/wiki/File:Aberdeenshire_blueberries.jpg'
+  from quizzes q
+  where slug = 'fruit' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Blueberries');
+
+-- trends
+insert into quizzes (slug, name) values ('trends', 'Trends') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Moustaches', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/The_Handlebar_%28Moustache%29_Club_-_LONDON_-_07-03-2013.jpg/960px-The_Handlebar_%28Moustache%29_Club_-_LONDON_-_07-03-2013.jpg', 'Eduardo Gaviña from Bilbao, PAIS VASCO', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:The_Handlebar_(Moustache)_Club_-_LONDON_-_07-03-2013.jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Moustaches');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Skinny jeans', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Skinny_jeans_street_style_%C3%A0_Strasbourg_octobre_2013.jpg/960px-Skinny_jeans_street_style_%C3%A0_Strasbourg_octobre_2013.jpg', 'Claude TRUONG-NGOC', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Skinny_jeans_street_style_%C3%A0_Strasbourg_octobre_2013.jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Skinny jeans');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Man buns', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Man_bun_%28Unsplash%29.jpg/960px-Man_bun_%28Unsplash%29.jpg', 'Joshua Munoz', 'CC0', 'https://commons.wikimedia.org/wiki/File:Man_bun_(Unsplash).jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Man buns');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Crop tops', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Crop_top_-_stomach_%281%29.jpg/960px-Crop_top_-_stomach_%281%29.jpg', 'Jorge Mir', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Crop_top_-_stomach_(1).jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Crop tops');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Bucket hats', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/Black_Barbour_bucket_hat.jpg/960px-Black_Barbour_bucket_hat.jpg', 'W.carter', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Black_Barbour_bucket_hat.jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Bucket hats');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Mullets', 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Man_with_Mullet_2022.jpg', 'Mathimed', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Man_with_Mullet_2022.jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Mullets');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Bum bags', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Leather_Fanny_Pack.JPG/960px-Leather_Fanny_Pack.JPG', 'Plot Spoiler', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Leather_Fanny_Pack.JPG'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Bum bags');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Tie-dye', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Tie_dye_spiral.jpg/960px-Tie_dye_spiral.jpg', 'Desmont4joy', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Tie_dye_spiral.jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Tie-dye');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Vinyl records', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Kazantip%2C_Popovka%2C_Crimea%2C_Technics_turntable%2C_Vinyl_turntable.jpg/960px-Kazantip%2C_Popovka%2C_Crimea%2C_Technics_turntable%2C_Vinyl_turntable.jpg', 'Vyacheslav Argenberg', 'CC BY 4.0', 'https://commons.wikimedia.org/wiki/File:Kazantip,_Popovka,_Crimea,_Technics_turntable,_Vinyl_turntable.jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Vinyl records');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Fidget spinners', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Fidget_spinner_red%2C_cropped.jpg/960px-Fidget_spinner_red%2C_cropped.jpg', 'Árni Dagur', 'CC0', 'https://commons.wikimedia.org/wiki/File:Fidget_spinner_red,_cropped.jpg'
+  from quizzes q
+  where slug = 'trends' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Fidget spinners');
+
+-- gen-z
+insert into quizzes (slug, name) values ('gen-z', 'Things Gen Z likes') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Bubble tea', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/2009-12-30_cups_of_bubble_tea_at_a_Chunshuitang_in_Taipei.jpg/960px-2009-12-30_cups_of_bubble_tea_at_a_Chunshuitang_in_Taipei.jpg', 'takuma mori', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:2009-12-30_cups_of_bubble_tea_at_a_Chunshuitang_in_Taipei.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Bubble tea');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Thrifting', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Working_in_charity_shop.jpg/960px-Working_in_charity_shop.jpg', 'Opaquetights99', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Working_in_charity_shop.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Thrifting');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Matcha', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Matcha_tea_latte_with_rosetta_latte_art.jpg/960px-Matcha_tea_latte_with_rosetta_latte_art.jpg', 'Irvan Ary Maulana', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Matcha_tea_latte_with_rosetta_latte_art.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Matcha');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Film cameras', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/NEXT18_%2843012666910%29.jpg/960px-NEXT18_%2843012666910%29.jpg', 'NEXT Conference from Berlin, Deutschland', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:NEXT18_(43012666910).jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Film cameras');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Baggy jeans', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Baggy_Pants_and_Curls_%2823743286741%29.jpg/960px-Baggy_Pants_and_Curls_%2823743286741%29.jpg', 'Michael Coghlan from Adelaide, Australia', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Baggy_Pants_and_Curls_(23743286741).jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Baggy jeans');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Stanley cups', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Stanley_bottles_tumblers_Vacuum_flasks_company_26_January_2025_Philippines1.jpg/960px-Stanley_bottles_tumblers_Vacuum_flasks_company_26_January_2025_Philippines1.jpg', null, 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Stanley_bottles_tumblers_Vacuum_flasks_company_26_January_2025_Philippines1.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Stanley cups');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'K-pop', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/IVE_%28%EC%95%84%EC%9D%B4%EB%B8%8C%29_performing_at_the_2023_World_Scout_Jamboree_K-POP_Super_Live_Concert.jpg/960px-IVE_%28%EC%95%84%EC%9D%B4%EB%B8%8C%29_performing_at_the_2023_World_Scout_Jamboree_K-POP_Super_Live_Concert.jpg', 'Korea.net / Korean Culture and Information Service', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:IVE_(%EC%95%84%EC%9D%B4%EB%B8%8C)_performing_at_the_2023_World_Scout_Jamboree_K-POP_Super_Live_Concert.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'K-pop');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Anime', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Ikebukuro_cosplay_convention_crashing_-_54315817995.jpg/960px-Ikebukuro_cosplay_convention_crashing_-_54315817995.jpg', 'sergejf', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Ikebukuro_cosplay_convention_crashing_-_54315817995.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Anime');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Labubu', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Labubu_Pop_Mart_store_in_New_York_City.jpg/960px-Labubu_Pop_Mart_store_in_New_York_City.jpg', 'Thelabubucollector', 'CC BY 4.0', 'https://commons.wikimedia.org/wiki/File:Labubu_Pop_Mart_store_in_New_York_City.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Labubu');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Energy drinks', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Various_energy_drinks_04.jpg/960px-Various_energy_drinks_04.jpg', 'Oto Zapletal', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Various_energy_drinks_04.jpg'
+  from quizzes q
+  where slug = 'gen-z' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Energy drinks');
+
+commit;
