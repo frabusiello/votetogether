@@ -279,3 +279,180 @@ insert into items (quiz_id, name, image_url, image_author, image_licence, image_
   where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Camping holidays');
 
 commit;
+
+-- More quizzes: two of hot takes, and two of statements to agree (10) or disagree (1) with.
+begin;
+
+-- hot-takes-food
+insert into quizzes (slug, name) values ('hot-takes-food', 'Hot takes: food & drink') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Well-done steak', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Grilled_steak_served_on_a_plate_with_avocado_and_sauce.jpg/960px-Grilled_steak_served_on_a_plate_with_avocado_and_sauce.jpg', 'Shixart1985', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Grilled_steak_served_on_a_plate_with_avocado_and_sauce.jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Well-done steak');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Mayo on chips', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Plate_of_thick-cut_french_fries_%28frites%29_served_with_a_side_of_dipping_sauces_%28ketchup_and_mayonnaise%29_at_Clyde_Common_in_Portland%2C_Oregon_%28May_2008%29.jpg/960px-Plate_of_thick-cut_french_fries_%28frites%29_served_with_a_side_of_dipping_sauces_%28ketchup_and_mayonnaise%29_at_Clyde_Common_in_Portland%2C_Oregon_%28May_2008%29.jpg', 'Ryan Snyder', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Plate_of_thick-cut_french_fries_(frites)_served_with_a_side_of_dipping_sauces_(ketchup_and_mayonnaise)_at_Clyde_Common_in_Portland,_Oregon_(May_2008).jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Mayo on chips');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Raisins in cookies', 'https://upload.wikimedia.org/wikipedia/commons/d/d6/O_is_for_oatmeal_raisin_cookies.jpg', '_Libby_', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:O_is_for_oatmeal_raisin_cookies.jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Raisins in cookies');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Mint chocolate', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/2020-04-28_06_44_03_Friendly%27s_Mint_Chocolate_Chip_Ice_Cream_in_the_Franklin_Farm_section_of_Oak_Hill%2C_Fairfax_County%2C_Virginia.jpg/960px-2020-04-28_06_44_03_Friendly%27s_Mint_Chocolate_Chip_Ice_Cream_in_the_Franklin_Farm_section_of_Oak_Hill%2C_Fairfax_County%2C_Virginia.jpg', 'Famartin', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:2020-04-28_06_44_03_Friendly%27s_Mint_Chocolate_Chip_Ice_Cream_in_the_Franklin_Farm_section_of_Oak_Hill,_Fairfax_County,_Virginia.jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Mint chocolate');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Instant coffee', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Homemade_Cold_Coffee%28Indian_Style%29-_Kolkata.jpg/960px-Homemade_Cold_Coffee%28Indian_Style%29-_Kolkata.jpg', 'TAPAS KUMAR HALDER', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Homemade_Cold_Coffee(Indian_Style)-_Kolkata.jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Instant coffee');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Avocado toast', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Avocado_toast.jpg/960px-Avocado_toast.jpg', 'Pequeño mar', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Avocado_toast.jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Avocado toast');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Gherkins', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Polish_style_pickled_cucumbers_IMGP0413.jpg/960px-Polish_style_pickled_cucumbers_IMGP0413.jpg', 'Nikodem Nijaki', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Polish_style_pickled_cucumbers_IMGP0413.jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Gherkins');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Marshmallows in hot chocolate', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Hot_chocolate_with_marshmallows_%28cropped%29.jpg/960px-Hot_chocolate_with_marshmallows_%28cropped%29.jpg', 'PapiPijuan', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Hot_chocolate_with_marshmallows_(cropped).jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Marshmallows in hot chocolate');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Truffle fries', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8e/Truffle_oil_french_fries_%2833024792848%29.jpg/960px-Truffle_oil_french_fries_%2833024792848%29.jpg', 'Tony Webster from Minneapolis, Minnesota, United States', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Truffle_oil_french_fries_(33024792848).jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Truffle fries');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Rice pudding', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Bowl_Rice_Cake.jpg/960px-Bowl_Rice_Cake.jpg', 'vixyao', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Bowl_Rice_Cake.jpg'
+  from quizzes q
+  where slug = 'hot-takes-food' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Rice pudding');
+
+-- hot-takes-life
+insert into quizzes (slug, name) values ('hot-takes-life', 'Hot takes: everyday life') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Wearing shoes indoors', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Shoes_Posing_-_2811737980.jpg/960px-Shoes_Posing_-_2811737980.jpg', 'quacktaculous', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Shoes_Posing_-_2811737980.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Wearing shoes indoors');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Self-checkouts', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Cashierless_supermarket_self-checkout_%286249298592%29.jpg/960px-Cashierless_supermarket_self-checkout_%286249298592%29.jpg', 'CoCreatr', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Cashierless_supermarket_self-checkout_(6249298592).jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Self-checkouts');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Christmas decorations in November', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Christmas_decorations_at_the_Indooroopilly_Shopping_Centre%2C_Australia%2C_2020%2C_01.jpg/960px-Christmas_decorations_at_the_Indooroopilly_Shopping_Centre%2C_Australia%2C_2020%2C_01.jpg', 'Chris Olszewski', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Christmas_decorations_at_the_Indooroopilly_Shopping_Centre,_Australia,_2020,_01.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Christmas decorations in November');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Working from home', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Home-office-336377.jpg/960px-Home-office-336377.jpg', 'Free-Photos (Pixabay)', 'CC0', 'https://commons.wikimedia.org/wiki/File:Home-office-336377.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Working from home');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Open-plan offices', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/OpenPlanRedBalloon1.jpg/960px-OpenPlanRedBalloon1.jpg', 'VeronicaTherese', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:OpenPlanRedBalloon1.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Open-plan offices');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Changing the clocks', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Old_alarm_clock_on_the_bookshelf_-_50233824038.jpg/960px-Old_alarm_clock_on_the_bookshelf_-_50233824038.jpg', 'Nenad Stojkovic', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Old_alarm_clock_on_the_bookshelf_-_50233824038.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Changing the clocks');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'It''s OK to take food from a friend''s plate', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Diners_at_a_Food_Stall_Inside_a_Market_Hall.jpg/960px-Diners_at_a_Food_Stall_Inside_a_Market_Hall.jpg', 'RizaCPH', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Diners_at_a_Food_Stall_Inside_a_Market_Hall.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'It''s OK to take food from a friend''s plate');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'The gym at 6am', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Young_blonde_woman_running_on_a_treadmill_in_the_gym_closeup.jpg/960px-Young_blonde_woman_running_on_a_treadmill_in_the_gym_closeup.jpg', 'Shixart1985', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Young_blonde_woman_running_on_a_treadmill_in_the_gym_closeup.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'The gym at 6am');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Electric scooters', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Electric_scooter_Blinkee_rented_for_minutes_in_Tomasz%C3%B3w_Mazowiecki._St._Antoni_and_Bartosz_G%C5%82owacki_Street_corner._September_2021.jpg/960px-Electric_scooter_Blinkee_rented_for_minutes_in_Tomasz%C3%B3w_Mazowiecki._St._Antoni_and_Bartosz_G%C5%82owacki_Street_corner._September_2021.jpg', 'WrS.tm.pl', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Electric_scooter_Blinkee_rented_for_minutes_in_Tomasz%C3%B3w_Mazowiecki._St._Antoni_and_Bartosz_G%C5%82owacki_Street_corner._September_2021.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Electric scooters');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cruise holidays', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Borealis_%28ship%2C_1997%29_at_Liverpool_Cruise_Terminal_2.jpg/960px-Borealis_%28ship%2C_1997%29_at_Liverpool_Cruise_Terminal_2.jpg', 'Rodhullandemu', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Borealis_(ship,_1997)_at_Liverpool_Cruise_Terminal_2.jpg'
+  from quizzes q
+  where slug = 'hot-takes-life' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cruise holidays');
+
+-- settle-this
+insert into quizzes (slug, name) values ('settle-this', 'Settle this') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A hot dog is a sandwich', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Hot_dog_with_mustard.png/960px-Hot_dog_with_mustard.png', 'Czar, original photographed by Renee Comet', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Hot_dog_with_mustard.png'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A hot dog is a sandwich');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cereal is a soup', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Froot-Loops-Cereal-Bowl.jpg/960px-Froot-Loops-Cereal-Bowl.jpg', 'Evan-Amos', 'CC0', 'https://commons.wikimedia.org/wiki/File:Froot-Loops-Cereal-Bowl.jpg'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cereal is a soup');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A tomato is a vegetable', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/960px-Tomato_je.jpg', 'Softeis', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Tomato_je.jpg'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A tomato is a vegetable');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Jaffa Cakes are biscuits', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Jaffa_cakes_in_lightbox_01_%28cropped%29.png/960px-Jaffa_cakes_in_lightbox_01_%28cropped%29.png', 'Richard Cocks', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Jaffa_cakes_in_lightbox_01_(cropped).png'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Jaffa Cakes are biscuits');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A Pop-Tart is a ravioli', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/Pop-Tarts-Cherry.jpg/960px-Pop-Tarts-Cherry.jpg', 'Evan-Amos', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Pop-Tarts-Cherry.jpg'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A Pop-Tart is a ravioli');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Water is wet', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Water_drop_001.jpg/960px-Water_drop_001.jpg', 'José Manuel Suárez from Spain', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Water_drop_001.jpg'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Water is wet');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Die Hard is a Christmas film', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Fox_Plaza_%28Los_Angeles%2C_Century_CIty%29_August_2024.JPG/960px-Fox_Plaza_%28Los_Angeles%2C_Century_CIty%29_August_2024.JPG', 'Alexis Doine', 'CC0', 'https://commons.wikimedia.org/wiki/File:Fox_Plaza_(Los_Angeles,_Century_CIty)_August_2024.JPG'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Die Hard is a Christmas film');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Pluto is a planet', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Pluto-01_Stern_03_Pluto_Color_TXT.jpg/960px-Pluto-01_Stern_03_Pluto_Color_TXT.jpg', 'NASA / Johns Hopkins University Applied Physics Laboratory / Southwest Research Institute', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Pluto-01_Stern_03_Pluto_Color_TXT.jpg'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Pluto is a planet');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A straw has one hole', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/A_paper_straw_for_bubble_tea_and_the_popular_straw.jpg/960px-A_paper_straw_for_bubble_tea_and_the_popular_straw.jpg', 'WrS.tm.pl', 'Public domain', 'https://commons.wikimedia.org/wiki/File:A_paper_straw_for_bubble_tea_and_the_popular_straw.jpg'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A straw has one hole');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cheesecake is a pie', 'https://upload.wikimedia.org/wikipedia/commons/d/db/Raised_slice_of_cheesecake.jpg', 'Sirabellas', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Raised_slice_of_cheesecake.jpg'
+  from quizzes q
+  where slug = 'settle-this' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cheesecake is a pie');
+
+-- who-would-win
+insert into quizzes (slug, name) values ('who-would-win', 'Who would win?') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A shark would beat a bear', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Great_White_Shark_%2814730796397%29.jpg/960px-Great_White_Shark_%2814730796397%29.jpg', 'Elias Levy', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Great_White_Shark_(14730796397).jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A shark would beat a bear');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, '100 men would beat a gorilla', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Mountain_gorilla_%28Gorilla_beringei_beringei%29_female_2.jpg/960px-Mountain_gorilla_%28Gorilla_beringei_beringei%29_female_2.jpg', 'Charles J. Sharp', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Mountain_gorilla_(Gorilla_beringei_beringei)_female_2.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = '100 men would beat a gorilla');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A lion would beat a tiger', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Bengal_tiger_in_Sanjay_Dubri_Tiger_Reserve_December_2024_by_Tisha_Mukherjee_15.jpg/960px-Bengal_tiger_in_Sanjay_Dubri_Tiger_Reserve_December_2024_by_Tisha_Mukherjee_15.jpg', 'Tisha Mukherjee', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Bengal_tiger_in_Sanjay_Dubri_Tiger_Reserve_December_2024_by_Tisha_Mukherjee_15.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A lion would beat a tiger');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A hippo would beat a crocodile', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Hippo_%28Hippopotamus_amphibius%29_with_open_mouth_%2816587676107%29.jpg/960px-Hippo_%28Hippopotamus_amphibius%29_with_open_mouth_%2816587676107%29.jpg', 'Bernard DUPONT from FRANCE', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Hippo_(Hippopotamus_amphibius)_with_open_mouth_(16587676107).jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A hippo would beat a crocodile');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A horse-sized duck is easier than 100 duck-sized horses', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/24/Male_mallard_duck_2.jpg/960px-Male_mallard_duck_2.jpg', 'Acarpentier', 'CC BY 3.0', 'https://commons.wikimedia.org/wiki/File:Male_mallard_duck_2.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A horse-sized duck is easier than 100 duck-sized horses');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A honey badger would beat a cobra', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Prague_ZOO_-_Mellivora_capensis_1.jpg/960px-Prague_ZOO_-_Mellivora_capensis_1.jpg', 'Matěj Baťha', 'CC BY-SA 2.5', 'https://commons.wikimedia.org/wiki/File:Prague_ZOO_-_Mellivora_capensis_1.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A honey badger would beat a cobra');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A kangaroo would beat a boxer', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Parc_australien_-_Kangourou_roux_13.jpg/960px-Parc_australien_-_Kangourou_roux_13.jpg', 'Tylwyth Eldar', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Parc_australien_-_Kangourou_roux_13.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A kangaroo would beat a boxer');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'An orca would beat a great white', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Orcinus_orca_-_Loro_Parque_01.jpg/960px-Orcinus_orca_-_Loro_Parque_01.jpg', 'H. Zell', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Orcinus_orca_-_Loro_Parque_01.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'An orca would beat a great white');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'A swan could break your arm', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/H%C3%B6ckerschwan_Cygnus_olor_7b_Richard_Bartz.jpg/960px-H%C3%B6ckerschwan_Cygnus_olor_7b_Richard_Bartz.jpg', 'Richard Bartz', 'CC BY-SA 2.5', 'https://commons.wikimedia.org/wiki/File:H%C3%B6ckerschwan_Cygnus_olor_7b_Richard_Bartz.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'A swan could break your arm');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'An ostrich would beat a kangaroo', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Struthio_camelus_massaicus%2C_ostriches_running_at_Nairobi_National_Park.jpg/960px-Struthio_camelus_massaicus%2C_ostriches_running_at_Nairobi_National_Park.jpg', 'Jorge Láscar from Australia', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Struthio_camelus_massaicus,_ostriches_running_at_Nairobi_National_Park.jpg'
+  from quizzes q
+  where slug = 'who-would-win' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'An ostrich would beat a kangaroo');
+
+commit;
