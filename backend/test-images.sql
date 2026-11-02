@@ -145,3 +145,137 @@ insert into items (quiz_id, name, image_url, image_author, image_licence, image_
   where slug = 'actors' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Margot Robbie');
 
 commit;
+
+-- New quizzes. Like the rest of this file, the seed doesn't know about them yet.
+begin;
+
+-- celebrity-men
+insert into quizzes (slug, name) values ('celebrity-men', 'Celebrity crushes (men)') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Brad Pitt', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Brad_Pitt_PF.jpg/960px-Brad_Pitt_PF.jpg', 'Maggie from Palm Springs, United States', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Brad_Pitt_PF.jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Brad Pitt');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'George Clooney', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/George_Clooney_66%C3%A8me_Festival_de_Venise_%28Mostra%29_3Alt1.jpg/960px-George_Clooney_66%C3%A8me_Festival_de_Venise_%28Mostra%29_3Alt1.jpg', 'Nicolas Genin', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:George_Clooney_66%C3%A8me_Festival_de_Venise_(Mostra)_3Alt1.jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'George Clooney');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Idris Elba', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Idris_Elba_at_SXSW_London_2025_3.jpg/960px-Idris_Elba_at_SXSW_London_2025_3.jpg', 'Amy Martin Photography', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Idris_Elba_at_SXSW_London_2025_3.jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Idris Elba');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Timothée Chalamet', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Timoth%C3%A9e_Chalamet_in_London_2025.jpg/960px-Timoth%C3%A9e_Chalamet_in_London_2025.jpg', 'Amy Martin Photography', 'CC BY 4.0', 'https://commons.wikimedia.org/wiki/File:Timoth%C3%A9e_Chalamet_in_London_2025.jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Timothée Chalamet');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Harry Styles', 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Harry_Styles_Denver_HsLot_2.jpg', 'Lovclyhes', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Harry_Styles_Denver_HsLot_2.jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Harry Styles');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Pedro Pascal', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Pedro_Pascal_at_the_2026_New_York_Film_Festival-043.jpg/960px-Pedro_Pascal_at_the_2026_New_York_Film_Festival-043.jpg', 'Bryan Berlin', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Pedro_Pascal_at_the_2026_New_York_Film_Festival-043.jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Pedro Pascal');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Ryan Gosling', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Ryan_Gosling_%2836067557491%29.jpg/960px-Ryan_Gosling_%2836067557491%29.jpg', 'Gage Skidmore from Peoria, AZ, United States of America', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Ryan_Gosling_(36067557491).jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Ryan Gosling');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'David Beckham', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/David_Beckham_UNICEF_%28cropped%29.jpg/960px-David_Beckham_UNICEF_%28cropped%29.jpg', 'Soccer Aid for Unicef', 'CC BY 3.0', 'https://commons.wikimedia.org/wiki/File:David_Beckham_UNICEF_(cropped).jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'David Beckham');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Jason Momoa', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Jason_Momoa%2C_Aquaman_%2845655623114%29.jpg/960px-Jason_Momoa%2C_Aquaman_%2845655623114%29.jpg', 'Eva Rinaldi from Sydney Australia', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Jason_Momoa,_Aquaman_(45655623114).jpg'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Jason Momoa');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Pete Davidson', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Pete_Davidson_portrait.png/960px-Pete_Davidson_portrait.png', 'LaVar James', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Pete_Davidson_portrait.png'
+  from quizzes q
+  where slug = 'celebrity-men' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Pete Davidson');
+
+-- celebrity-women
+insert into quizzes (slug, name) values ('celebrity-women', 'Celebrity crushes (women)') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Beyoncé', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f4/Beyonc%C3%A9_and_Jay-Z_On_The_Run_II.jpg/960px-Beyonc%C3%A9_and_Jay-Z_On_The_Run_II.jpg', 'Erin McCormack', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Beyonc%C3%A9_and_Jay-Z_On_The_Run_II.jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Beyoncé');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Rihanna', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Rihanna_by_Rajasekharan_2019.jpg/960px-Rihanna_by_Rajasekharan_2019.jpg', 'Rajasekharan Parameswaran', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Rihanna_by_Rajasekharan_2019.jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Rihanna');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Jennifer Aniston', 'https://upload.wikimedia.org/wikipedia/commons/1/16/JenniferAnistonHWoFFeb2012.jpg', 'Angela George', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:JenniferAnistonHWoFFeb2012.jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Jennifer Aniston');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Taylor Swift', 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Swift%2C_Taylor_%282007%29_cropped_2.JPG', 'minds-eye', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Swift,_Taylor_(2007)_cropped_2.JPG'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Taylor Swift');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Kim Kardashian', 'https://upload.wikimedia.org/wikipedia/commons/8/89/Kim_Kardashian_%286307608171%29.jpg', 'Eva Rinaldi', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Kim_Kardashian_(6307608171).jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Kim Kardashian');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Dua Lipa', 'https://upload.wikimedia.org/wikipedia/commons/3/31/Dua_Lipa_2021_interview.jpg', 'Warner Music New Zealand', 'CC BY 3.0', 'https://commons.wikimedia.org/wiki/File:Dua_Lipa_2021_interview.jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Dua Lipa');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Billie Eilish', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Billie_Eilish_at_Pukkelpop_Festival_-_18_AUGUST_2019_%2804%29.jpg/960px-Billie_Eilish_at_Pukkelpop_Festival_-_18_AUGUST_2019_%2804%29.jpg', 'crommelincklars', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Billie_Eilish_at_Pukkelpop_Festival_-_18_AUGUST_2019_(04).jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Billie Eilish');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Helen Mirren', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/MKr24712_Helen_Mirren_%28Golda%2C_Berlinale_2023%29.jpg/960px-MKr24712_Helen_Mirren_%28Golda%2C_Berlinale_2023%29.jpg', 'Martin Kraft', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:MKr24712_Helen_Mirren_(Golda,_Berlinale_2023).jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Helen Mirren');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Jennifer Lopez', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/Jennifer_Lopez_at_the_2025_Sundance_Film_Festival_2.jpg/960px-Jennifer_Lopez_at_the_2025_Sundance_Film_Festival_2.jpg', 'Everwest', 'CC BY 4.0', 'https://commons.wikimedia.org/wiki/File:Jennifer_Lopez_at_the_2025_Sundance_Film_Festival_2.jpg'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Jennifer Lopez');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Lady Gaga', 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Lady_Gaga_Grammys_2017.png', 'Rogue Artists', 'CC BY 3.0', 'https://commons.wikimedia.org/wiki/File:Lady_Gaga_Grammys_2017.png'
+  from quizzes q
+  where slug = 'celebrity-women' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Lady Gaga');
+
+-- hot-takes
+insert into quizzes (slug, name) values ('hot-takes', 'Hot takes') on conflict (slug) do nothing;
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Pineapple on pizza', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Hawaiian_pizza_1.jpg/960px-Hawaiian_pizza_1.jpg', '@joefoodie from USA', 'CC BY 2.0', 'https://commons.wikimedia.org/wiki/File:Hawaiian_pizza_1.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Pineapple on pizza');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Socks with sandals', 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Sandals_Worn_wth_White_Ankle_Socks.jpg', 'Oddman47', 'CC0', 'https://commons.wikimedia.org/wiki/File:Sandals_Worn_wth_White_Ankle_Socks.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Socks with sandals');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Milk before cereal', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Corn_flakes_in_a_bowl.jpg/960px-Corn_flakes_in_a_bowl.jpg', 'JIP', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Corn_flakes_in_a_bowl.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Milk before cereal');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Ketchup on pasta', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/Spaghetti_Naporitan_002.jpg/960px-Spaghetti_Naporitan_002.jpg', 'Ocdp', 'CC0', 'https://commons.wikimedia.org/wiki/File:Spaghetti_Naporitan_002.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Ketchup on pasta');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Crocs', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Crocs-synthetic-clogs.jpg/960px-Crocs-synthetic-clogs.jpg', 'Skyeyemx', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Crocs-synthetic-clogs.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Crocs');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Reclining your plane seat', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Seats_on_an_airplane.jpg/960px-Seats_on_an_airplane.jpg', 'Douglas P. Perkins', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Seats_on_an_airplane.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Reclining your plane seat');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cold pizza for breakfast', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Chicken_ranch_and_tortellini_pizza.JPG/960px-Chicken_ranch_and_tortellini_pizza.JPG', 'Drummer070 at English Wikipedia', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Chicken_ranch_and_tortellini_pizza.JPG'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cold pizza for breakfast');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Talking during films', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Audience_in_Kino-Palatsi_cinema_in_Helsinki_in_1930.jpg/960px-Audience_in_Kino-Palatsi_cinema_in_Helsinki_in_1930.jpg', 'Daniel Atelier', 'CC BY-SA 4.0', 'https://commons.wikimedia.org/wiki/File:Audience_in_Kino-Palatsi_cinema_in_Helsinki_in_1930.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Talking during films');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Cats are better than dogs', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Cute_cat_and_dog_1.jpg/960px-Cute_cat_and_dog_1.jpg', 'S. J. Pyrotechnic from Boise, ID, USA', 'CC BY-SA 2.0', 'https://commons.wikimedia.org/wiki/File:Cute_cat_and_dog_1.jpg'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Cats are better than dogs');
+insert into items (quiz_id, name, image_url, image_author, image_licence, image_source_url)
+  select id, 'Camping holidays', 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f4/Tent_camping_at_Hurricane_River_Campground_%288ab7ecf4-55e8-462b-a159-b0ce7ade5a0d%29.JPG/960px-Tent_camping_at_Hurricane_River_Campground_%288ab7ecf4-55e8-462b-a159-b0ce7ade5a0d%29.JPG', 'NPS', 'Public domain', 'https://commons.wikimedia.org/wiki/File:Tent_camping_at_Hurricane_River_Campground_(8ab7ecf4-55e8-462b-a159-b0ce7ade5a0d).JPG'
+  from quizzes q
+  where slug = 'hot-takes' and not exists (select 1 from items i where i.quiz_id = q.id and i.name = 'Camping holidays');
+
+commit;
