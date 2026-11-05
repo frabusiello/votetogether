@@ -1,10 +1,7 @@
 import { type Player, type Question } from '../types'
 import { nextQuestion, type Send } from '../socket'
-import { Countdown } from '../components/Countdown'
 import { QuestionImage } from '../components/QuestionImage'
-
-// Once everyone has voted, the TV counts down this long before moving on.
-const NEXT_QUESTION_COUNTDOWN_MS = 5_000
+import { useEffect } from 'react'
 
 export function QuestionScreen({
   code,
@@ -20,25 +17,17 @@ export function QuestionScreen({
   const { item } = question
   const voted = new Set(question.votedPlayerIds)
   const everyoneVoted = players.length > 0 && voted.size >= players.length
-  const isLast = question.number >= question.total
+  useEffect(() => {
+    if (everyoneVoted === true) {
+      nextQuestion(send, code, question.number).catch(() => {})
+    }
+  }, [everyoneVoted, send, code, question.number])
   return (
     <main className="screen">
       <p className="question-number">
         Question {question.number} of {question.total}
       </p>
-      {everyoneVoted ? (
-        // The TV drives the game on: when this reaches zero it asks the server for the next
-        // question, which then reaches the phones too. Keyed by question so it restarts for each.
-        <Countdown
-          key={question.number}
-          ms={NEXT_QUESTION_COUNTDOWN_MS}
-          label={isLast ? "Everyone's voted! Results in" : "Everyone's voted! Next question in"}
-          doneLabel={isLast ? 'Here come the results!' : 'Next question!'}
-          onDone={() => nextQuestion(send, code, question.number).catch(() => {})}
-        />
-      ) : (
-        <QuestionImage item={item} />
-      )}
+      <QuestionImage item={item} />
       <h1 className="question-name">{item.name}</h1>
       <p>
         Vote 1–10 on your phone ·{' '}

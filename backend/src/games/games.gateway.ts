@@ -24,7 +24,7 @@ type Watching = { code: string; playerId: number | null }
 
 // Pressing Start counts down this long on every screen before the first question, so an accidental
 // tap can be cancelled.
-const START_COUNTDOWN_MS = 10_000
+const START_COUNTDOWN_MS = 7_000
 
 const room = (code: string) => `game:${code.toUpperCase()}`
 
