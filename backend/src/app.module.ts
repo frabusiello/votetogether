@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core'
+import { ScheduleModule } from '@nestjs/schedule'
 import { minutes, ThrottlerModule } from '@nestjs/throttler'
 import { AppController } from './app.controller.js'
 import { AppService } from './app.service.js'
@@ -13,6 +14,8 @@ import { QuizzesModule } from './quizzes/quizzes.module.js'
     DbModule,
     GamesModule,
     QuizzesModule,
+    // Runs the hourly clean-up of old games.
+    ScheduleModule.forRoot(),
     // Requests per address per minute, across the whole API. Behind a tunnel or a home router
     // everyone can share one address, so this leaves room for a full game of 20 phones joining at
     // once; it's only there to stop a script hammering the API.

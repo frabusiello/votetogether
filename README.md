@@ -147,6 +147,16 @@ authentication. This is a deliberate choice of ease of rejoining over security, 
 Votetogether is a party game played with friends in the same room. Revisit it when signup is
 added.
 
+## Limits and clean-up
+
+So the game can sit on the internet (for example behind a tunnel) without filling up:
+
+- **Old games are deleted.** Every hour the backend deletes games over 7 days old, along with their
+  players and votes.
+- **The HTTP API is rate limited** per address: 120 requests a minute in all, and 10 new games a
+  minute. Behind a tunnel or a home router everyone may share one address, so the limits leave room
+  for a full game. Socket events aren't limited.
+
 ## Realtime
 
 The TV and the phones stay in sync over a Socket.IO WebSocket at `/api/socket.io` (handled by

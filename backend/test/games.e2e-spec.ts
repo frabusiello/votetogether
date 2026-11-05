@@ -6,6 +6,7 @@ import { App } from 'supertest/types.js'
 import { AppModule } from './../src/app.module.js'
 import { DB, type Db } from './../src/db/db.module.js'
 import { games, players } from './../src/db/schema.js'
+import { GamesService } from './../src/games/games.service.js'
 
 describe('GamesController (e2e)', () => {
   let app: INestApplication<App>
@@ -50,6 +51,31 @@ describe('GamesController (e2e)', () => {
     await request(app.getHttpServer()).post('/games').expect(429)
     // The rest of the API has its own, looser limit.
     await request(app.getHttpServer()).get('/quizzes').expect(200)
+  })
+
+  it('deletes games over 7 days old, with their players, and keeps newer ones', async () => {
+    const old = await request(app.getHttpServer()).post('/games').expect(201)
+    const recent = await request(app.getHttpServer()).post('/games').expect(201)
+    createdIds.push(old.body.id, recent.body.id)
+    const day = 24 * 60 * 60 * 1000
+    await db
+      .update(games)
+      .set({ createdAt: new Date(Date.now() - 8 * day) })
+      .where(eq(games.id, old.body.id))
+    await db
+      .update(games)
+      .set({ createdAt: new Date(Date.now() - 6 * day) })
+      .where(eq(games.id, recent.body.id))
+    await db.insert(players).values({ gameId: old.body.id, name: 'Ana' })
+
+    expect(await app.get(GamesService).deleteOldGames()).toBeGreaterThanOrEqual(1)
+
+    const left = await db
+      .select({ id: games.id })
+      .from(games)
+      .where(inArray(games.id, [old.body.id, recent.body.id]))
+    expect(left).toEqual([{ id: recent.body.id }])
+    expect(await db.select().from(players).where(eq(players.gameId, old.body.id))).toEqual([])
   })
 
   it('/games/:code (GET) lists the players who joined', async () => {

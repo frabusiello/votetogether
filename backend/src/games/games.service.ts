@@ -5,10 +5,12 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common'
-import { and, asc, count, eq, isNull, sql } from 'drizzle-orm'
+import { Cron, CronExpression } from '@nestjs/schedule'
+import { and, asc, count, eq, isNull, lt, sql } from 'drizzle-orm'
 import { DB, type Db } from '../db/db.module.js'
 import { gameItems, games, items, players, quizzes, votes } from '../db/schema.js'
 
@@ -25,6 +27,10 @@ export const MAX_PLAYERS = 20
 const MIN_SCORE = 1
 const MAX_SCORE = 10
 
+// Games, with their players and votes, are deleted this long after they were created. Nobody comes
+// back to an old game, and it frees up join codes.
+export const GAME_MAX_AGE_DAYS = 7
+
 export function generateCode(): string {
   let code = ''
   for (let i = 0; i < CODE_LENGTH; i++) {
@@ -37,7 +43,30 @@ export const isWholeNumber = (value: unknown): value is number => Number.isInteg
 
 @Injectable()
 export class GamesService {
+  private readonly logger = new Logger(GamesService.name)
+
   constructor(@Inject(DB) private readonly db: Db) {}
+
+  // Checked hourly, so a server that's often restarted still gets round to it.
+  @Cron(CronExpression.EVERY_HOUR)
+  async deleteOldGamesOnSchedule() {
+    try {
+      const deleted = await this.deleteOldGames()
+      if (deleted > 0) this.logger.log(`Deleted ${deleted} games over ${GAME_MAX_AGE_DAYS} days old`)
+    } catch (err) {
+      this.logger.error('Could not delete old games', err)
+    }
+  }
+
+  // Players, votes and questions go with their game (on delete cascade). Returns how many games
+  // were deleted.
+  async deleteOldGames() {
+    const deleted = await this.db
+      .delete(games)
+      .where(lt(games.createdAt, sql`now() - make_interval(days => ${GAME_MAX_AGE_DAYS})`))
+      .returning({ id: games.id })
+    return deleted.length
+  }
 
   async create() {
     const [quiz] = await this.db
