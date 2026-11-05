@@ -53,7 +53,7 @@
     cursor: progress;
   }
   &:focus-visible {
-    outline: 3px dashed var(--accent);
+    outline: 3px dashed var(--accent-text);
     outline-offset: 5px;
   }
 }
@@ -126,7 +126,7 @@
     font-family: var(--display);
     font-size: 32px;
     font-weight: 800;
-    color: var(--accent);
+    color: var(--accent-text);
   }
 }
 
@@ -161,7 +161,7 @@
       opacity: 0.5;
     }
     &:focus-visible {
-      outline: 3px dashed var(--accent);
+      outline: 3px dashed var(--accent-text);
       outline-offset: 3px;
     }
   }
@@ -439,7 +439,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .question-image {
@@ -596,7 +596,7 @@
   }
 
   &:focus-visible {
-    outline: 3px dashed var(--accent);
+    outline: 3px dashed var(--accent-text);
     outline-offset: 6px;
     border-radius: 999px;
   }
@@ -638,6 +638,6 @@
   text-underline-offset: 4px;
 
   &:hover {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 }

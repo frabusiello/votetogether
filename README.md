@@ -12,6 +12,33 @@ Then the game starts, an image of the thing to vote on appears on the main scree
 - `backend/` — NestJS API (port 3000, routes under `/api`)
 - `frontend/` — React + Vite + TypeScript (port 5173, proxies `/api` to the backend)
 
+## Screenshots
+
+The TV (top) and a phone (bottom). The colours follow the device's light or dark mode.
+
+| Lobby: the join code, quiz picker and players | A question: who has voted so far |
+| --- | --- |
+| ![TV lobby](docs/screenshots/tv-lobby.png) | ![TV question](docs/screenshots/tv-question.png) |
+
+| Results: everyone's name stacked on the score they gave |
+| --- |
+| ![TV results](docs/screenshots/tv-results.png) |
+
+| Voting | Results | Voting (dark) | Results (dark) |
+| --- | --- | --- | --- |
+| <img src="docs/screenshots/phone-vote.png" alt="Phone vote screen" width="200"> | <img src="docs/screenshots/phone-results.png" alt="Phone results screen" width="200"> | <img src="docs/screenshots/phone-vote-dark.png" alt="Phone vote screen in dark mode" width="200"> | <img src="docs/screenshots/phone-results-dark.png" alt="Phone results screen in dark mode" width="200"> |
+
+<details>
+<summary>The TV in dark mode</summary>
+
+![TV lobby, dark](docs/screenshots/tv-lobby-dark.png)
+![TV question, dark](docs/screenshots/tv-question-dark.png)
+![TV results, dark](docs/screenshots/tv-results-dark.png)
+
+</details>
+
+To retake them, play a game in a browser at 1280×800 for the TV and 390×844 for the phones.
+
 ## Getting started
 
 ```sh
@@ -33,6 +60,11 @@ npm run db:migrate && npm run db:seed
 ```
 
 After changing the schema, run `npm run db:generate` to create a new migration.
+
+**Images.** Items store an image URL, not the image itself, plus its credit (`image_author`,
+`image_licence`, `image_source_url`), which the TV and phones show under the photo. The URL can
+point anywhere, e.g. Wikimedia Commons, or at a file in `frontend/public/images/`, which is served
+at `/images/…` both by Vite in development and by the app in Docker.
 
 ## Running with Docker
 
@@ -67,17 +99,19 @@ address, so set `PUBLIC_URL` in that case.
 
 ## How a game works
 
-1. **Create (TV).** _Create game_ makes a game with a 4-letter join code. Every game currently uses the
-   _Foods_ quiz. The TV shows the code and lists players as they join.
+1. **Create (TV).** _Create game_ makes a game with a 4-letter join code. The TV shows the code
+   and lists players as they join. The lobby lists every quiz (_Pizza toppings_, _Hot takes_,
+   _The ick_…), and the TV or any phone can pick one until the game starts. Each quiz has 10
+   items, and an item can have a photo with its credit (author, licence, source).
 2. **Join (phones).** Players enter the code and a name. A game holds up to 20 players.
 3. **Start (any phone).** Any player can press _Start game_ once everyone is in. That starts a
-   10-second countdown on every screen and closes the game to new players. Anyone can cancel it,
+   7-second countdown on every screen and closes the game to new players. Anyone can cancel it,
    which reopens the lobby.
 4. **Vote (phones).** Each phone shows the current question with a 1–10 slider and a _Vote_ button.
    A player can change their vote until the game moves on. The TV ticks off each player as they
    vote, without showing the scores.
-5. **Next question.** Once everyone has voted, the TV counts down 5 seconds and then moves everyone
-   to the next question.
+5. **Next question.** As soon as everyone has voted, the TV moves everyone to the next question,
+   with no countdown. So the last vote on a question can't be changed.
 6. **Results.** After the last question, the TV goes through the results one question at a time.
    Each question's chart is made of people's names: there's a column for each score from 1 to 10,
    and every player's name is stacked in the column for the score they gave, coloured on the same
@@ -91,8 +125,8 @@ address, so set `PUBLIC_URL` in that case.
    and questions nobody voted on come first, since there's nothing to argue about. The order is worked out from the votes each time,
    with nothing extra stored, which is safe because votes can't change once the results start.
 7. **Back to the lobby.** On the last result each phone shows **Back to the lobby**. The first
-   tap starts a **new game** with its own code and lobby, so the next round can be a different
-   kind of game or quiz once those exist. Everyone from the finished game is already in the
+   tap starts a **new game** with its own code and lobby, so the next round can use a different
+   quiz. Everyone from the finished game is already in the
    new lobby under the same name. The TV and every phone move over by themselves: the finished
    game keeps a link to the new one (`next_game_id`, sent to screens as `nextCode`), so a phone
    that was offline follows when it reconnects.
@@ -127,7 +161,8 @@ id first. Everything after that goes over the socket:
 | `cancelStart` `{ code, playerId }` | a phone | Stop the start countdown and reopen joining. |
 | `begin` `{ code }` | every screen, when the start countdown hits 0 | Move to question 1. Only the first one counts. |
 | `vote` `{ code, playerId, score }` | a phone | Record or change a 1–10 vote on the current question. |
-| `next` `{ code, questionNumber }` | the TV, when its countdown hits 0 | Move to the next question, or to the results after the last. A repeated or late `next` does nothing. |
+| `chooseQuiz` `{ code, quizId }` | the TV or a phone, in the lobby | Pick the game's quiz. Refused once the start countdown is running. |
+| `next` `{ code, questionNumber }` | the TV, as soon as everyone has voted | Move to the next question, or to the results after the last. A repeated or late `next` does nothing. |
 | `next-result` `{ code, playerId, questionNumber }` | a phone, on the results | Mark this player ready to move on (it can't be undone). Once every connected player is ready, move to the next question's results. |
 | `back-to-lobby` `{ code, playerId }` | a phone, on the last result | Start a new game for the same players and send its code to every screen as `nextCode`. A repeat gets the same new game. |
 
@@ -145,7 +180,8 @@ for no real gain, because the server decides every change and there are no simul
 merge.
 
 **Countdowns run on the screens, not the server.** Nothing about them is stored in the database and
-the server runs no timers. The screens count down and send `begin` or `next` when they reach 0. The
+the server runs no timers. The screens count down to the start and send `begin` when they reach 0.
+Moving on to the next question needs no timer at all: the TV sends `next` once everyone has voted. The
 server only remembers, in memory, which lobbies are counting down to the start. That's how it keeps
 joining closed and tells a screen that reloads mid-countdown how long is left. If the server
 restarts, that's forgotten and the lobby simply reopens.
