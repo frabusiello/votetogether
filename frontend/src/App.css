@@ -116,6 +116,37 @@
   }
 }
 
+/* In the lobby: where to join and the code, with a QR code beside them that phones can scan. */
+.join-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 24px 48px;
+}
+
+.join-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.join-qr {
+  display: block;
+  width: 220px;
+  height: 220px;
+  border: var(--outline);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transform: rotate(1.5deg);
+
+  @media (max-width: 1024px) {
+    width: 160px;
+    height: 160px;
+  }
+}
+
 .countdown {
   display: flex;
   flex-direction: column;

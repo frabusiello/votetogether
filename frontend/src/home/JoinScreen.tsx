@@ -3,13 +3,15 @@ import { JoinError, joinGame, type PlayerSeat, savePlayerSeat } from '../game'
 import { BackButton } from '../components/BackButton'
 
 export function JoinScreen({
+  initialCode = '',
   onJoined,
   onBack,
 }: {
+  initialCode?: string
   onJoined: (seat: PlayerSeat) => void
   onBack: () => void
 }) {
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(initialCode)
   const [name, setName] = useState('')
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,6 +62,8 @@ export function JoinScreen({
             maxLength={20}
             required
             autoComplete="nickname"
+            // Arriving from the QR code, the code is already filled in, so the name is next.
+            autoFocus={initialCode !== ''}
             placeholder="Ana"
           />
         </label>

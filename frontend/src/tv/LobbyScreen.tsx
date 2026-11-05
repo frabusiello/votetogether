@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
-import { fetchServerConfig, type ServerConfig } from '../game'
+import { QRCodeSVG } from 'qrcode.react'
+import { fetchServerConfig, joinLink, type ServerConfig } from '../game'
 import { StartCountdown } from '../components/Countdown'
 import { type GameScreenProps } from './GameScreen'
 import { QuizSelector } from '../components/QuizSelector'
-// Where players should go to join, as shown on the TV:
+// Where players should go to join, as shown on the TV and in the QR code:
 // 1. PUBLIC_URL, when the server has one set (a domain, or a NAS's fixed name or IP).
 // 2. Otherwise the address the TV was opened with, e.g. http://192.168.1.20:5174 on a home server.
 // 3. Except when the TV is on the server itself via localhost, which phones can't reach: then the
 //    server's local network IP, on the same port.
-function useJoinAddress() {
+function useJoinUrl() {
   const [config, setConfig] = useState<ServerConfig | null>(null)
   useEffect(() => {
     fetchServerConfig()
@@ -16,17 +17,17 @@ function useJoinAddress() {
       .catch(() => {})
   }, [])
 
-  const { hostname, host, port } = window.location
-  if (config?.publicUrl) return config.publicUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
-  const onThisMachine = ['localhost', '127.0.0.1', '[::1]'].includes(hostname)
-  if (onThisMachine && config?.lanAddress) {
-    return port ? `${config.lanAddress}:${port}` : config.lanAddress
+  const publicUrl = config?.publicUrl && URL.parse(config.publicUrl)
+  if (publicUrl) return publicUrl
+  const url = new URL(window.location.origin)
+  if (['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && config?.lanAddress) {
+    url.hostname = config.lanAddress
   }
-  return host
+  return url
 }
 
 export function LobbyScreen({ game, send, onStartOver }: GameScreenProps) {
-  const joinAddress = useJoinAddress()
+  const joinUrl = useJoinUrl()
   // Once someone presses Start, joining is closed, so the code gives way to the countdown.
   if (game.startingInMs != null) {
     return (
@@ -44,17 +45,32 @@ export function LobbyScreen({ game, send, onStartOver }: GameScreenProps) {
 
   return (
     <main className="screen">
-      <p className="tagline">
-        Go to <strong>{joinAddress}</strong> and join with the code
-      </p>
-      <div
-        className="game-code"
-        role="img"
-        aria-label={`Game code ${game.code.split('').join(' ')}`}
-      >
-        {game.code.split('').map((letter, i) => (
-          <span key={i}>{letter}</span>
-        ))}
+      <div className="join-info">
+        <div className="join-code">
+          <p className="tagline">
+            Scan to join, or go to <strong>{joinUrl.host}</strong> and enter the code
+          </p>
+          <div
+            className="game-code"
+            role="img"
+            aria-label={`Game code ${game.code.split('').join(' ')}`}
+          >
+            {game.code.split('').map((letter, i) => (
+              <span key={i}>{letter}</span>
+            ))}
+          </div>
+        </div>
+        {/* Opens the join screen with the code already filled in. Dark on cream in both colour
+            modes: some phone cameras can't read a light-on-dark code. */}
+        <QRCodeSVG
+          className="join-qr"
+          value={joinLink(joinUrl, game.code)}
+          size={200}
+          marginSize={2}
+          fgColor="#3a2a20"
+          bgColor="#fffad3"
+          title="Scan to join this game"
+        />
       </div>
       <QuizSelector game={game} send={send} />
       {game.players.length > 0 ? (

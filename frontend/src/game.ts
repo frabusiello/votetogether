@@ -119,3 +119,27 @@ export async function fetchGame(code: string): Promise<Game> {
   if (!res.ok) throw new Error(`Loading game ${code} failed with ${res.status}`)
   return res.json()
 }
+
+// A link that opens the join screen with the game's code filled in, for the QR code in the lobby.
+const JOIN_PARAM = 'join'
+
+export function joinLink(base: URL, code: string) {
+  const url = new URL('/', base)
+  url.searchParams.set(JOIN_PARAM, code)
+  return url.href
+}
+
+// The code from a join link this page was opened with, if any.
+export function getJoinLinkCode(): string | null {
+  const code = new URLSearchParams(window.location.search).get(JOIN_PARAM)?.toUpperCase()
+  return code && /^[A-Z]{4}$/.test(code) ? code : null
+}
+
+// Drops the code from the address bar once it's been read, so a later refresh doesn't reopen the
+// join screen.
+export function clearJoinLinkCode() {
+  const url = new URL(window.location.href)
+  if (!url.searchParams.has(JOIN_PARAM)) return
+  url.searchParams.delete(JOIN_PARAM)
+  window.history.replaceState(null, '', url)
+}

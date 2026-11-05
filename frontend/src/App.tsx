@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   clearHostedGameCode,
+  clearJoinLinkCode,
   clearPlayerSeat,
   fetchGame,
   GameNotFoundError,
   getHostedGameCode,
+  getJoinLinkCode,
   getPlayerSeat,
   joinGame,
   type PlayerSeat,
@@ -24,7 +26,8 @@ type SavedGame = { as: 'host'; code: string } | { as: 'player'; seat: PlayerSeat
 
 type Screen =
   | { name: 'home' }
-  | { name: 'join' }
+  // code: from a join link (the QR code in the lobby), to fill in.
+  | { name: 'join'; code?: string }
   | { name: 'restoring'; saved: SavedGame }
   | { name: 'offline'; saved: SavedGame }
   | { name: 'game'; game: Game }
@@ -41,11 +44,22 @@ function savedCode(saved: SavedGame) {
   return saved.as === 'host' ? saved.code : saved.seat.code
 }
 
+// Read once, when the page loads: the address bar is cleared straight after.
+const joinLinkCode = getJoinLinkCode()
+
+// A join link (the QR code in the lobby) for a game this browser isn't already in goes to the join
+// screen; the saved game is only replaced once they've actually joined. Otherwise reconnect to the
+// saved game, if there is one.
+function getFirstScreen(): Screen {
+  const saved = getSavedGame()
+  if (joinLinkCode && (!saved || savedCode(saved) !== joinLinkCode)) {
+    return { name: 'join', code: joinLinkCode }
+  }
+  return saved ? { name: 'restoring', saved } : { name: 'home' }
+}
+
 function App() {
-  const [screen, setScreen] = useState<Screen>(() => {
-    const saved = getSavedGame()
-    return saved ? { name: 'restoring', saved } : { name: 'home' }
-  })
+  const [screen, setScreen] = useState<Screen>(getFirstScreen)
 
   // Reconnect to the game saved in a cookie. Only a missing game (or player) forgets it: a network
   // error keeps it so the screen can retry once the connection is back.
@@ -100,8 +114,9 @@ function App() {
   }
 
   useEffect(() => {
-    const saved = getSavedGame()
-    if (saved) loadSavedGame(saved)
+    clearJoinLinkCode()
+    const first = getFirstScreen()
+    if (first.name === 'restoring') loadSavedGame(first.saved)
   }, [])
 
   // The TV and the phones follow their game live (players joining, the game starting, votes), and
@@ -176,6 +191,7 @@ function App() {
     case 'join':
       return (
         <JoinScreen
+          initialCode={screen.code}
           onJoined={(seat) => {
             // Load the game the same way as a reconnect, so a dropped connection right after
             // joining lands on the Retry screen instead of losing the seat.

@@ -88,7 +88,7 @@ Settings, read from the environment or from a `.env` file next to `docker-compos
 | Variable | Default | What it's for |
 | --- | --- | --- |
 | `PORT` | `5174` | The port the game is served on. The default is one above the frontend's dev port (5173), to stay clear of the usual 80, 3000 and 8080. |
-| `PUBLIC_URL` | _(empty)_ | The address the TV tells players to join at, e.g. `http://192.168.1.20:5174` or `https://games.example.com`. |
+| `PUBLIC_URL` | _(empty)_ | The address the TV tells players to join at, with `http://` or `https://`, e.g. `http://192.168.1.20:5174` or `https://games.example.com`. |
 | `POSTGRES_PASSWORD` | `votetogether` | The database password. Change it if the server is reachable from outside your home network. |
 
 **The address on the TV.** When `PUBLIC_URL` is set, the TV always shows it. Otherwise the TV
@@ -99,11 +99,13 @@ address, so set `PUBLIC_URL` in that case.
 
 ## How a game works
 
-1. **Create (TV).** _Create game_ makes a game with a 4-letter join code. The TV shows the code
-   and lists players as they join. The lobby lists every quiz (_Pizza toppings_, _Hot takes_,
+1. **Create (TV).** _Create game_ makes a game with a 4-letter join code. The TV shows the code,
+   a QR code for it, and lists players as they join. The lobby lists every quiz (_Pizza toppings_, _Hot takes_,
    _The ick_…), and the TV or any phone can pick one until the game starts. Each quiz has 10
    items, and an item can have a photo with its credit (author, licence, source).
-2. **Join (phones).** Players enter the code and a name. A game holds up to 20 players.
+2. **Join (phones).** Players enter the code and a name. A game holds up to 20 players. Scanning
+   the QR code opens a join link (`/?join=ABCD`) with the code already filled in, so they only
+   type a name. A phone already in that game just goes back to it.
 3. **Start (any phone).** Any player can press _Start game_ once everyone is in. That starts a
    7-second countdown on every screen and closes the game to new players. Anyone can cancel it,
    which reopens the lobby.
