@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common'
+import { minutes, Throttle } from '@nestjs/throttler'
 import { GamesGateway } from './games.gateway.js'
 import { GamesService } from './games.service.js'
 
@@ -9,6 +10,10 @@ export class GamesController {
     private readonly gateway: GamesGateway,
   ) {}
 
+  // A TV creates one game per evening (later rounds are made by Back to the lobby, over the
+  // socket), so this is kept much tighter than the rest of the API: games are what fill up the
+  // database.
+  @Throttle({ default: { ttl: minutes(1), limit: 10 } })
   @Post()
   create() {
     return this.games.create()

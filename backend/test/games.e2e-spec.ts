@@ -42,6 +42,16 @@ describe('GamesController (e2e)', () => {
     expect(first.body.code).not.toBe(second.body.code)
   })
 
+  it('/games (POST) turns away an 11th game from the same address within a minute', async () => {
+    for (let i = 0; i < 10; i++) {
+      const created = await request(app.getHttpServer()).post('/games').expect(201)
+      createdIds.push(created.body.id)
+    }
+    await request(app.getHttpServer()).post('/games').expect(429)
+    // The rest of the API has its own, looser limit.
+    await request(app.getHttpServer()).get('/quizzes').expect(200)
+  })
+
   it('/games/:code (GET) lists the players who joined', async () => {
     const created = await request(app.getHttpServer()).post('/games').expect(201)
     createdIds.push(created.body.id)
